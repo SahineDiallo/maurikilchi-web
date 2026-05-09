@@ -5,6 +5,7 @@ import { type Lang } from '../constants/i18n'
 import { api, type Product } from '../lib/api'
 import { CATEGORIES } from '../constants/categories'
 import ProductCard from '../components/ProductCard'
+import { useSeo } from '../hooks/useSeo'
 
 // ─── Skeleton card ────────────────────────────────────────────────────────────
 function SkeletonCard() {
@@ -154,6 +155,13 @@ function FilterPanel({
 interface Props { lang: Lang }
 
 export default function ExplorePage({ lang }: Props) {
+  useSeo({
+    title      : 'Explorer les Produits en Mauritanie — Catalogue Maurikilchi',
+    description: 'Explorez des milliers de produits mauritaniens : vêtements, alimentation, électronique, artisanat, arrivages et plus. Livraison disponible à Nouakchott et partout en Mauritanie.',
+    keywords   : 'produits Mauritanie, catalogue Mauritanie, shopping en ligne Mauritanie, acheter Mauritanie, vêtements Mauritanie, alimentation Mauritanie, électronique Mauritanie, arrivage Mauritanie',
+    url        : 'https://maurikilchi.com/explorer',
+  })
+
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts]       = useState<Product[]>([])
   const [loading, setLoading]         = useState(true)

@@ -1,4 +1,5 @@
 import { type Lang } from '../../constants/i18n'
+import { useSeo } from '../../hooks/useSeo'
 
 interface Props { lang: Lang }
 
@@ -33,6 +34,23 @@ const STEPS = [
 
 export default function CarRapidePage({ lang }: Props) {
   const isRtl = lang === 'ar'
+
+  useSeo({
+    title      : 'Car Rapide Nouakchott — Trouvez votre Transport en temps réel',
+    description: 'Trouvez un car rapide à Nouakchott en temps réel. Transport urbain, taxi collectif, déplacement rapide dans la ville. Maurikilchi connecte passagers et chauffeurs de car rapide.',
+    keywords   : 'car rapide Nouakchott, car rapide Mauritanie, transport Nouakchott, taxi collectif Mauritanie, transport urbain Nouakchott, mobilité Mauritanie, كار راپيد نواكشوط, مواصلات موريتانيا',
+    url        : 'https://maurikilchi.com/car-rapide',
+    schema     : {
+      '@context'  : 'https://schema.org',
+      '@type'     : 'Service',
+      name        : 'Car Rapide Nouakchott — Maurikilchi',
+      description : 'Localisation en temps réel des cars rapides à Nouakchott et en Mauritanie.',
+      provider    : { '@type': 'Organization', name: 'Maurikilchi', url: 'https://maurikilchi.com' },
+      areaServed  : { '@type': 'City', name: 'Nouakchott' },
+      serviceType : 'Transport urbain',
+    },
+  })
+
   return (
     <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
 

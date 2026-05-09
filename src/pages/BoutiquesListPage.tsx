@@ -4,6 +4,7 @@ import { Search, X, SlidersHorizontal } from 'lucide-react'
 import { type Lang } from '../constants/i18n'
 import { api, type Boutique } from '../lib/api'
 import BoutiqueCard from '../components/BoutiqueCard'
+import { useSeo } from '../hooks/useSeo'
 
 interface Props { lang: Lang }
 
@@ -36,6 +37,13 @@ function SkeletonCard() {
 }
 
 export default function BoutiquesListPage({ lang }: Props) {
+  useSeo({
+    title      : 'Toutes les Boutiques en ligne — Mauritanie',
+    description: 'Découvrez des centaines de boutiques mauritaniennes en ligne : restaurants, vêtements, alimentation, électronique, arrivages et plus. Commandez directement depuis Maurikilchi.',
+    keywords   : 'boutiques Mauritanie, boutiques en ligne Mauritanie, commerce en ligne Mauritanie, magasins Nouakchott, shopping Mauritanie, restaurants Nouakchott, supermarché en ligne Mauritanie',
+    url        : 'https://maurikilchi.com/boutiques',
+  })
+
   const [searchParams, setSearchParams] = useSearchParams()
   const [boutiques, setBoutiques]       = useState<Boutique[]>([])
   const [loading, setLoading]           = useState(true)

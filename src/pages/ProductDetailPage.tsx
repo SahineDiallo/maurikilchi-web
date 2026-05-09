@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useSeo } from '../hooks/useSeo'
 import {
   ArrowLeft, MapPin, ShoppingBag, ChevronRight,
   Phone, Share2, CheckCircle2, XCircle,
@@ -64,6 +65,33 @@ export default function ProductDetailPage({ lang }: Props) {
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [similar, setSimilar] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+
+  useSeo({
+    title      : product ? `${product.title} — ${product.price} MRU` : 'Produit — Maurikilchi',
+    description: product
+      ? `${product.title} à ${product.price} MRU sur Maurikilchi. ${product.description ? product.description.replace(/<[^>]+>/g, '').slice(0, 120) : 'Disponible en ligne, livraison en Mauritanie.'}`
+      : 'Découvrez ce produit sur Maurikilchi, la marketplace mauritanienne.',
+    keywords   : product ? `${product.title}, ${product.category_name}, ${product.boutique_name}, acheter Mauritanie, Maurikilchi` : undefined,
+    url        : `https://maurikilchi.com/produit/${slug}`,
+    image      : product?.primary_image_url ?? undefined,
+    type       : 'product',
+    schema     : product ? {
+      '@context'   : 'https://schema.org',
+      '@type'      : 'Product',
+      name         : product.title,
+      description  : product.description?.replace(/<[^>]+>/g, '') ?? '',
+      image        : product.primary_image_url ?? undefined,
+      url          : `https://maurikilchi.com/produit/${slug}`,
+      category     : product.category_name,
+      offers       : {
+        '@type'       : 'Offer',
+        price         : product.price,
+        priceCurrency : 'MRU',
+        availability  : product.is_available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        seller        : { '@type': 'Organization', name: product.boutique_name },
+      },
+    } : undefined,
+  })
   const [notFound, setNotFound] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
   const [expanded, setExpanded] = useState(false)

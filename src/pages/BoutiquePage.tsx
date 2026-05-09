@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useSeo } from '../hooks/useSeo'
 import {
   ArrowLeft, MapPin, Search, X,
   Share2, CheckCircle2, Phone,
@@ -65,6 +66,26 @@ export default function BoutiquePage({ lang }: Props) {
   const [boutique, setBoutique] = useState<Boutique | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+
+  useSeo({
+    title      : boutique ? `${boutique.name} — Boutique en ligne Mauritanie` : 'Boutique en ligne — Maurikilchi',
+    description: boutique
+      ? `${boutique.name} sur Maurikilchi — ${boutique.description || 'Boutique en ligne mauritanienne'}. Livraison disponible à Nouakchott et en Mauritanie.`
+      : 'Découvrez cette boutique sur Maurikilchi, la marketplace mauritanienne.',
+    keywords   : boutique ? `${boutique.name}, boutique en ligne Mauritanie, ${boutique.ville}, Maurikilchi` : undefined,
+    url        : `https://maurikilchi.com/boutique/${slug}`,
+    image      : boutique?.image_url ?? undefined,
+    type       : 'website',
+    schema     : boutique ? {
+      '@context'  : 'https://schema.org',
+      '@type'     : 'Store',
+      name        : boutique.name,
+      description : boutique.description,
+      image       : boutique.image_url ?? undefined,
+      url         : `https://maurikilchi.com/boutique/${slug}`,
+      address     : { '@type': 'PostalAddress', addressLocality: boutique.ville, addressCountry: 'MR' },
+    } : undefined,
+  })
   const [loadingMore, setLoadingMore] = useState(false)
   const [notFound, setNotFound] = useState(false)
   const [nextUrl, setNextUrl] = useState<string | null>(null)

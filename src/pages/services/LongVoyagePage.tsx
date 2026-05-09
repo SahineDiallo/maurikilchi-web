@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect } from 'react'
 import { type Lang } from '../../constants/i18n'
 import { api } from '../../lib/api'
 import { ALL_LOCATIONS } from '../../constants/mauritaniaCities'
+import { useSeo } from '../../hooks/useSeo'
 
 interface Props { lang: Lang }
 
@@ -148,6 +149,23 @@ function CitySelect({
 
 export default function LongVoyagePage({ lang }: Props) {
   const isRtl = lang === 'ar'
+
+  useSeo({
+    title      : 'Long Voyage Mauritanie — Cars & Transport Interurbain',
+    description: 'Voyagez en Mauritanie : trouvez des cars pour Rosso, Zouerate, Atar, Kiffa, Kaédi et toutes les villes. Transport longue distance sécurisé. Réservez sur Maurikilchi.',
+    keywords   : 'long voyage Mauritanie, transport interurbain Mauritanie, car Nouakchott Rosso, car Nouakchott Atar, car Nouakchott Zouerate, voyage interurbain Mauritanie, transport longue distance Mauritanie, سفر موريتانيا',
+    url        : 'https://maurikilchi.com/long-voyage',
+    schema     : {
+      '@context'  : 'https://schema.org',
+      '@type'     : 'Service',
+      name        : 'Long Voyage Mauritanie — Maurikilchi',
+      description : 'Transport longue distance et interurbain en Mauritanie.',
+      provider    : { '@type': 'Organization', name: 'Maurikilchi', url: 'https://maurikilchi.com' },
+      areaServed  : { '@type': 'Country', name: 'Mauritanie' },
+      serviceType : 'Transport interurbain',
+    },
+  })
+
   const [origin,      setOrigin]      = useState('')
   const [destination, setDestination] = useState('')
   const [voyageurs,   setVoyageurs]   = useState<Voyageur[]>([])

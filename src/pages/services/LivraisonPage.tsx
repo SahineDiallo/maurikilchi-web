@@ -1,4 +1,5 @@
 import { type Lang } from '../../constants/i18n'
+import { useSeo } from '../../hooks/useSeo'
 
 interface Props { lang: Lang }
 
@@ -33,6 +34,23 @@ const STEPS = [
 
 export default function LivraisonPage({ lang }: Props) {
   const isRtl = lang === 'ar'
+
+  useSeo({
+    title      : 'Livraison à domicile en Mauritanie — Nouakchott & tout le pays',
+    description: 'Faites livrer vos colis et courses à domicile à Nouakchott et dans toute la Mauritanie. Livreurs disponibles, rapides et fiables. Commandez sur Maurikilchi.',
+    keywords   : 'livraison Mauritanie, livraison Nouakchott, livraison à domicile Mauritanie, livreur Nouakchott, livraison express Mauritanie, colis Mauritanie, توصيل نواكشوط, توصيل موريتانيا',
+    url        : 'https://maurikilchi.com/livraison',
+    schema     : {
+      '@context'  : 'https://schema.org',
+      '@type'     : 'Service',
+      name        : 'Livraison à domicile — Maurikilchi',
+      description : 'Service de livraison à domicile à Nouakchott et en Mauritanie.',
+      provider    : { '@type': 'Organization', name: 'Maurikilchi', url: 'https://maurikilchi.com' },
+      areaServed  : { '@type': 'Country', name: 'Mauritanie' },
+      serviceType : 'Livraison à domicile',
+    },
+  })
+
   return (
     <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
 

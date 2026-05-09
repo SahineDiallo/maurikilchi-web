@@ -1,13 +1,87 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MAURI-KILCHI</title>
+
+    <!-- Primary -->
+    <title>Maurikilchi — Vente en ligne &amp; Livraison en Mauritanie</title>
+    <meta name="description" content="Maurikilchi est la première marketplace mauritanienne. Achetez, vendez, faites livrer à Nouakchott et partout en Mauritanie. Car rapide, livraison à domicile, boutiques en ligne." />
+    <meta name="keywords"    content="Maurikilchi, vente en ligne Mauritanie, e-commerce Mauritanie, livraison Mauritanie, livraison Nouakchott, livraison à domicile, car rapide Nouakchott, car rapide Mauritanie, boutique en ligne Mauritanie, marché en ligne, acheter Mauritanie, shopping Mauritanie, توصيل موريتانيا, تجارة إلكترونية موريتانيا, كار راپيد نواكشوط" />
+    <meta name="author"      content="Maurikilchi" />
+    <meta name="robots"      content="index, follow" />
+    <link rel="canonical"    href="https://maurikilchi.com" />
+
+    <!-- Geo -->
+    <meta name="geo.region"    content="MR" />
+    <meta name="geo.placename" content="Nouakchott" />
+    <meta name="geo.position"  content="18.0858;15.9785" />
+    <meta name="ICBM"          content="18.0858, 15.9785" />
+
+    <!-- Open Graph -->
+    <meta property="og:type"         content="website" />
+    <meta property="og:url"          content="https://maurikilchi.com" />
+    <meta property="og:site_name"    content="Maurikilchi" />
+    <meta property="og:locale"       content="fr_MR" />
+    <meta property="og:title"        content="Maurikilchi — Vente en ligne &amp; Livraison en Mauritanie" />
+    <meta property="og:description"  content="La première marketplace mauritanienne. Achetez, vendez, faites livrer à Nouakchott et partout en Mauritanie." />
+    <meta property="og:image"        content="https://maurikilchi.com/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Maurikilchi — Vente en ligne &amp; Livraison en Mauritanie" />
+    <meta name="twitter:description" content="La première marketplace mauritanienne. Livraison, car rapide, boutiques en ligne — Mauritanie." />
+    <meta name="twitter:image"       content="https://maurikilchi.com/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon"             type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Organisation + WebSite schema (static — all crawlers see this) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://maurikilchi.com/#organization",
+          "name": "Maurikilchi",
+          "url": "https://maurikilchi.com",
+          "logo": "https://maurikilchi.com/logo.png",
+          "description": "Marketplace mauritanienne — vente en ligne, livraison à domicile, car rapide, boutiques",
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "MR",
+            "addressLocality": "Nouakchott"
+          },
+          "areaServed": { "@type": "Country", "name": "Mauritanie" }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://maurikilchi.com/#website",
+          "url": "https://maurikilchi.com",
+          "name": "Maurikilchi",
+          "publisher": { "@id": "https://maurikilchi.com/#organization" },
+          "inLanguage": ["fr", "ar"],
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://maurikilchi.com/explorer?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
