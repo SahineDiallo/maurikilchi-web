@@ -1,22 +1,16 @@
-@import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { width: 100%; min-height: 100%; }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   background: #FAFAF8;
-  color: #1A1A1A;
+  color: #0D0D0D;
   -webkit-font-smoothing: antialiased;
-}
-
-[dir="rtl"] {
-  font-family: 'IBM Plex Sans Arabic', sans-serif;
-}
-
-#root {
-  width: 100%;
-  min-height: 100svh;
 }
 
 .line-clamp-1 {
@@ -32,3 +26,5 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+input:focus { outline: none; }

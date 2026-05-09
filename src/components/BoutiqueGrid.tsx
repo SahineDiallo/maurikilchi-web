@@ -1,31 +1,35 @@
 import { useEffect, useState } from 'react'
-import { api, Boutique } from '../lib/api'
+import { api } from '../lib/api'
+import type { Boutique } from '../lib/api'
 import BoutiqueCard from './BoutiqueCard'
-import CategoryFilter from './CategoryFilter'
-import { t, Lang } from '../constants/i18n'
+import { t, type Lang } from '../constants/i18n'
 
-interface Props {
-  lang: Lang
-  searchQuery: string
-}
+const FILTERS = (lang: Lang) => [
+  { key: '', label: lang === 'fr' ? 'Tout' : 'الكل' },
+  { key: 'restaurant', label: lang === 'fr' ? 'Restaurant' : 'مطعم' },
+  { key: 'supermarche', label: lang === 'fr' ? 'Supermarché' : 'سوبرماركت' },
+  { key: 'arrivage', label: lang === 'fr' ? 'Arrivage' : 'بضائع' },
+  { key: 'electronique', label: lang === 'fr' ? 'Électronique' : 'إلكترونيات' },
+]
 
-function SkeletonCard() {
+function Skeleton() {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
-      <div className="h-48 bg-gray-100" />
-      <div className="p-4 space-y-2">
-        <div className="h-4 bg-gray-100 rounded w-3/4" />
-        <div className="h-3 bg-gray-100 rounded w-full" />
-        <div className="h-3 bg-gray-100 rounded w-1/2" />
+    <div className="animate-pulse bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+      <div className="h-44 bg-gray-100" />
+      <div className="p-3 space-y-2">
+        <div className="h-3 bg-gray-100 rounded-full w-3/4" />
+        <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+        <div className="h-8 bg-gray-100 rounded-xl mt-3" />
       </div>
     </div>
   )
 }
 
-export default function BoutiqueGrid({ lang, searchQuery }: Props) {
+interface Props { lang: Lang; searchQuery: string; activeType: string; onTypeChange: (t: string) => void }
+
+export default function BoutiqueGrid({ lang, searchQuery, activeType, onTypeChange }: Props) {
   const [boutiques, setBoutiques] = useState<Boutique[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeType, setActiveType] = useState('')
   const isRtl = lang === 'ar'
 
   useEffect(() => {
@@ -33,52 +37,59 @@ export default function BoutiqueGrid({ lang, searchQuery }: Props) {
     const params: Record<string, string> = {}
     if (activeType) params.boutique_type = activeType
     if (searchQuery) params.search = searchQuery
-
     api.get('/boutiques/', { params })
       .then(res => setBoutiques(res.data?.results ?? res.data ?? []))
       .catch(() => setBoutiques([]))
       .finally(() => setLoading(false))
   }, [activeType, searchQuery])
 
-  const visible = boutiques.slice(0, 12)
-
   return (
-    <section id="boutiques" dir={isRtl ? 'rtl' : 'ltr'} className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+    <section id="boutiques" dir={isRtl ? 'rtl' : 'ltr'} className="max-w-7xl mx-auto px-4 md:px-8 pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{t.boutiques.title[lang]}</h2>
+          <p className="text-xs uppercase tracking-widest text-muted mb-2">{lang === 'fr' ? '— La sélection' : '— الاختيار'}</p>
+          <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight">{t.boutiques.title[lang]}</h2>
         </div>
-        {!loading && boutiques.length > 12 && (
-          <a
-            href="/boutiques"
-            className="text-sm font-semibold hover:underline transition-colors"
-            style={{ color: '#F8AC12' }}
-          >
-            {t.boutiques.viewAll[lang]} →
-          </a>
-        )}
-      </div>
-
-      {/* Filter */}
-      <div className="mb-8 -mx-4 sm:-mx-6 px-4 sm:px-6">
-        <CategoryFilter lang={lang} active={activeType} onChange={setActiveType} />
+        {/* Filter tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {FILTERS(lang).map(f => (
+            <button key={f.key} onClick={() => onTypeChange(f.key)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium shrink-0 transition-all ${
+                activeType === f.key
+                  ? 'bg-foreground text-white'
+                  : 'bg-secondary text-muted hover:text-foreground'
+              }`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+          {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} />)}
         </div>
-      ) : visible.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <span className="text-4xl">🏪</span>
-          <p className="mt-3 text-sm">{t.boutiques.empty[lang]}</p>
+      ) : boutiques.length === 0 ? (
+        <div className="text-center py-24 text-muted">
+          <p className="text-4xl mb-4">🏪</p>
+          <p className="text-sm">{t.boutiques.empty[lang]}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {visible.map(b => <BoutiqueCard key={b.id} boutique={b} lang={lang} />)}
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+            {boutiques.slice(0, 8).map(b => <BoutiqueCard key={b.id} boutique={b} lang={lang} />)}
+          </div>
+          {boutiques.length > 8 && (
+            <div className="text-center mt-12">
+              <a href="/boutiques"
+                className="inline-flex items-center gap-2 h-11 px-8 rounded-full border-2 border-foreground text-sm font-semibold text-foreground hover:bg-foreground hover:text-white transition-all">
+                {t.boutiques.viewAll[lang]} →
+              </a>
+            </div>
+          )}
+        </>
       )}
     </section>
   )

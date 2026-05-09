@@ -1,13 +1,11 @@
-import { t, Lang } from '../constants/i18n'
+import { t, type Lang } from '../constants/i18n'
 
-interface Props {
-  lang: Lang
-  onSearch: (q: string) => void
-}
+interface Props { lang: Lang; onSearch: (q: string) => void }
+
+const HERO_IMG = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900&q=85'
 
 export default function Hero({ lang, onSearch }: Props) {
   const isRtl = lang === 'ar'
-  const lines = t.hero.title[lang].split('\n')
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -16,94 +14,91 @@ export default function Hero({ lang, onSearch }: Props) {
   }
 
   return (
-    <section
-      dir={isRtl ? 'rtl' : 'ltr'}
-      className="relative pt-32 pb-20 px-4 sm:px-6 overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #FFFBF0 0%, #FAFAF8 60%, #FFF8E7 100%)' }}
-    >
-      {/* Decorative blobs */}
-      <div
-        className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-30 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #F8AC12 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}
-      />
-      <div
-        className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-20 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #F8AC12 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }}
-      />
+    <section dir={isRtl ? 'rtl' : 'ltr'} className="relative overflow-hidden bg-foreground">
+      <div className="mx-auto grid max-w-7xl items-center gap-0 md:grid-cols-2 min-h-screen">
 
-      <div className="relative max-w-3xl mx-auto text-center">
-        {/* Tag */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
-          style={{ background: '#FFF3CC', color: '#9A6500' }}>
-          <span>🇲🇷</span>
-          {t.hero.tag[lang]}
-        </div>
+        {/* Left: content */}
+        <div className="relative z-10 px-6 py-28 md:px-12 lg:px-16">
+          {/* Badge */}
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80 mb-6">
+            ✦ {t.hero.tag[lang]} · {lang === 'fr' ? 'Mauritanie' : 'موريتانيا'}
+          </span>
 
-        {/* Title */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-gray-900 mb-5">
-          {lines.map((line, i) => (
-            <span key={i}>
-              {i === 1 ? <span style={{ color: '#F8AC12' }}>{line}</span> : line}
-              {i < lines.length - 1 && <br />}
-            </span>
-          ))}
-        </h1>
+          {/* Heading */}
+          <h1 className={`font-display font-medium leading-[1.08] tracking-tight text-white mb-5 ${isRtl ? 'text-5xl md:text-6xl' : 'text-5xl md:text-7xl'}`}>
+            {lang === 'fr' ? (
+              <>Le marché<br />mauritanien,<br /><em className="not-italic" style={{ color: '#F8AC12' }}>réinventé.</em></>
+            ) : (
+              <>السوق<br />الموريتاني،<br /><em className="not-italic" style={{ color: '#F8AC12' }}>من جديد.</em></>
+            )}
+          </h1>
 
-        {/* Subtitle */}
-        <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed">
-          {t.hero.subtitle[lang]}
-        </p>
+          <p className="text-white/55 text-base md:text-lg max-w-sm mb-8 leading-relaxed">
+            {t.hero.subtitle[lang]}
+          </p>
 
-        {/* Search bar */}
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 max-w-xl mx-auto mb-8">
-          <div className="flex-1 relative">
-            <svg
-              className={`absolute top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 ${isRtl ? 'right-4' : 'left-4'}`}
-              fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
-            </svg>
+          {/* Search */}
+          <form onSubmit={handleSubmit} className="flex gap-2 mb-8 max-w-sm">
             <input
               name="q"
               type="text"
               placeholder={t.hero.searchPlaceholder[lang]}
-              className={`w-full h-13 rounded-2xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all shadow-sm ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}
-              style={{ height: '52px' }}
+              className={`flex-1 h-12 bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-full text-sm px-5 focus:border-white/60 focus:bg-white/15 transition-all`}
             />
-          </div>
-          <button
-            type="submit"
-            className="h-13 px-6 rounded-2xl font-semibold text-sm text-white shadow-sm hover:opacity-90 active:scale-95 transition-all shrink-0"
-            style={{ background: '#F8AC12', height: '52px' }}
-          >
-            {t.hero.searchBtn[lang]}
-          </button>
-        </form>
+            <button type="submit"
+              className="h-12 px-5 rounded-full text-sm font-semibold shrink-0 transition-all hover:opacity-90"
+              style={{ background: '#F8AC12', color: '#0D0D0D' }}>
+              {t.hero.searchBtn[lang]}
+            </button>
+          </form>
 
-        {/* App CTA */}
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <a
-            href="#download"
-            className="flex items-center gap-3 px-5 py-3 rounded-2xl font-semibold text-sm text-gray-900 bg-white border border-gray-200 shadow-sm hover:border-amber-400 hover:shadow-md transition-all"
-          >
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Google_Play_Arrow_logo.svg/512px-Google_Play_Arrow_logo.svg.png" alt="Play Store" className="w-5 h-5 object-contain" />
-            {t.hero.ctaApp[lang]}
-          </a>
+          {/* CTA */}
+          <div className="flex flex-wrap gap-3 mb-12">
+            <a href="#download"
+              className="h-11 px-6 rounded-full text-sm font-semibold flex items-center gap-2 transition-all hover:opacity-90"
+              style={{ background: '#F8AC12', color: '#0D0D0D' }}>
+              {t.hero.ctaApp[lang]} →
+            </a>
+            <a href="#boutiques"
+              className="h-11 px-6 rounded-full text-sm font-semibold flex items-center gap-2 border border-white/25 text-white hover:bg-white/10 transition-all">
+              {t.nav.browse[lang]}
+            </a>
+          </div>
+
+          {/* Stats */}
+          <div className="flex gap-10 border-t border-white/10 pt-8">
+            {[
+              { n: '200+', l: t.hero.stats.boutiques[lang] },
+              { n: '5k+', l: t.hero.stats.products[lang] },
+              { n: '10+', l: t.hero.stats.cities[lang] },
+            ].map(s => (
+              <div key={s.l}>
+                <p className="font-display text-2xl text-white">{s.n}</p>
+                <p className="text-xs text-white/40 mt-0.5">{s.l}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="mt-14 flex items-center justify-center gap-8 sm:gap-14 flex-wrap">
-          {[
-            { value: '200+', label: t.hero.stats.boutiques[lang] },
-            { value: '5k+', label: t.hero.stats.products[lang] },
-            { value: '10+', label: t.hero.stats.cities[lang] },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+        {/* Right: image */}
+        <div className="relative h-[50vh] md:h-screen">
+          <img src={HERO_IMG} alt="Boutique Mauri-Kilchi"
+            className="absolute inset-0 w-full h-full object-cover opacity-60" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #0D0D0D 0%, transparent 40%)' }} />
+
+          {/* Floating card */}
+          <div className="absolute bottom-8 left-6 right-6 md:left-8 md:right-8 flex items-center justify-between rounded-2xl p-4 border border-white/10"
+            style={{ background: 'rgba(13,13,13,0.75)', backdropFilter: 'blur(12px)' }}>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40">{lang === 'fr' ? 'En vedette' : 'مميز'}</p>
+              <p className="font-display text-white text-base mt-0.5">{lang === 'fr' ? 'Boutiques locales' : 'متاجر محلية'}</p>
             </div>
-          ))}
+            <a href="#boutiques"
+              className="h-9 px-4 rounded-full text-xs font-semibold flex items-center transition-all hover:opacity-90"
+              style={{ background: '#F8AC12', color: '#0D0D0D' }}>
+              {lang === 'fr' ? 'Voir' : 'عرض'} →
+            </a>
+          </div>
         </div>
       </div>
     </section>

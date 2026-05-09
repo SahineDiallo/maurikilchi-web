@@ -7,6 +7,12 @@ export const api = axios.create({
   timeout: 10000,
 })
 
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('access_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
 export interface Boutique {
   id: number
   slug: string
@@ -34,4 +40,29 @@ export interface Category {
   image_url: string | null
   parent: number | null
   children?: Category[]
+}
+
+export interface Product {
+  id: number
+  slug: string
+  title: string
+  price: string
+  primary_image_url: string | null
+  primary_image: string | null
+  images?: { image_url: string }[]
+  category_name: string
+  boutique_name: string
+  boutique_slug?: string
+  description?: string
+  is_available?: boolean
+  old_price?: string | null
+}
+
+export interface ProductDetail extends Product {
+  is_available: boolean
+  stock_quantity: number | null
+  category_slug: string | null
+  boutique_ville: string | null
+  boutique_whatsapp: string | null
+  boutique_phone: string | null
 }
