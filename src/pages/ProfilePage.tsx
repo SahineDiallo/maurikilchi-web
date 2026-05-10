@@ -6,18 +6,9 @@ import StarterKit from '@tiptap/starter-kit'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import { type Lang } from '../constants/i18n'
+import ActivitiesSection from '../components/ActivitiesSection'
 
 interface Props { lang: Lang }
-
-const ROLE_LABEL: Record<string, { fr: string; ar: string }> = {
-  vendeur:  { fr: 'Vendeur',   ar: 'بائع'    },
-  livreur:  { fr: 'Livreur',   ar: 'موصّل'   },
-  voyageur: { fr: 'Voyageur',  ar: 'مسافر'   },
-  maurigo:  { fr: 'Car Rapide',ar: 'كار رابيد'},
-}
-const ROLE_EMOJI: Record<string, string> = {
-  vendeur: '🏪', livreur: '🏍️', voyageur: '🚌', maurigo: '🚕',
-}
 
 interface SubCat   { id: number; name: string; icon: string }
 interface Category { id: number; name: string; icon: string; subcategories: SubCat[] }
@@ -512,12 +503,11 @@ export default function ProfilePage({ lang }: Props) {
 
   useEffect(() => {
     if (!user) return
-    // Fetch boutique
+    // Always fetch boutique (seller might enable it mid-session)
     api.get('/boutiques/mine/').then(r => {
       const list = r.data?.results ?? r.data ?? []
       if (list.length > 0) setBoutique(list[0])
     }).catch(() => {}).finally(() => setBoutiqueLoad(false))
-    // Fetch categories for product form
     api.get('/categories/').then(r => {
       const list = r.data?.results ?? r.data ?? []
       setCategories(list)
@@ -546,8 +536,14 @@ export default function ProfilePage({ lang }: Props) {
 
   if (!user) return null
 
-  const roleLabel = user.role ? (ROLE_LABEL[user.role]?.[lang] ?? user.role) : null
-  const isVendeur = user.role === 'vendeur'
+  const isSellerActive = !!user.seller_profile?.is_active
+
+  // Active profile badges for the sidebar
+  const activeBadges = []
+  if (isSellerActive) activeBadges.push({ emoji: '🏪', fr: 'Vendeur', ar: 'بائع' })
+  if (user.transport?.type === 'livreur')  activeBadges.push({ emoji: '🏍️', fr: 'Livreur',      ar: 'موصّل'     })
+  if (user.transport?.type === 'voyageur') activeBadges.push({ emoji: '🚌', fr: 'Long Voyage',   ar: 'سفر طويل'  })
+  if (user.transport?.type === 'maurigo')  activeBadges.push({ emoji: '🚕', fr: 'Car Rapide',    ar: 'كار رابيد' })
 
   return (
     <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -557,7 +553,6 @@ export default function ProfilePage({ lang }: Props) {
           {/* ── LEFT: User card ──────────────────────────────────────────── */}
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              {/* Avatar */}
               <div className="flex flex-col items-center text-center mb-5">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-200 mb-3">
                   {user.avatar_url
@@ -588,9 +583,19 @@ export default function ProfilePage({ lang }: Props) {
                   <>
                     <h2 className="font-bold text-gray-900 text-lg">{user.first_name} {user.last_name}</h2>
                     <p className="text-sm text-gray-500 mt-0.5">{user.phone}</p>
-                    {roleLabel && (
-                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1">
-                        {user.role && ROLE_EMOJI[user.role]} {roleLabel}
+                    {/* Active profile badges */}
+                    {activeBadges.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+                        {activeBadges.map(b => (
+                          <span key={b.fr} className="inline-flex items-center gap-1 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">
+                            {b.emoji} {b[lang === 'fr' ? 'fr' : 'ar']}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {activeBadges.length === 0 && (
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full px-3 py-1">
+                        👤 {lang === 'fr' ? 'Client' : 'عميل'}
                       </span>
                     )}
                   </>
@@ -613,8 +618,8 @@ export default function ProfilePage({ lang }: Props) {
               </div>
             </div>
 
-            {/* Quick stats */}
-            {isVendeur && boutique && (
+            {/* Quick stats — seller with boutique */}
+            {isSellerActive && boutique && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 grid grid-cols-2 gap-3">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">{products.length}</p>
@@ -631,8 +636,11 @@ export default function ProfilePage({ lang }: Props) {
           {/* ── RIGHT: Main content ──────────────────────────────────────── */}
           <div className="space-y-6">
 
-            {/* Boutique section — vendeurs only */}
-            {isVendeur && (
+            {/* Activities section — always first */}
+            <ActivitiesSection lang={lang} hasBoutique={!!boutique} />
+
+            {/* Boutique section — seller only */}
+            {isSellerActive && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
@@ -673,7 +681,7 @@ export default function ProfilePage({ lang }: Props) {
                 ) : (
                   <div className="px-6 py-8 text-center">
                     <Store size={32} className="mx-auto text-gray-200 mb-3" />
-                    <p className="text-sm text-gray-500 mb-4">{lang === 'fr' ? 'Vous n\'avez pas encore de boutique.' : 'ليس لديك متجر بعد.'}</p>
+                    <p className="text-sm text-gray-500 mb-4">{lang === 'fr' ? "Vous n'avez pas encore de boutique." : 'ليس لديك متجر بعد.'}</p>
                     <Link to="/boutique/create-boutique"
                       className="inline-flex items-center gap-1.5 bg-amber-400 text-gray-900 font-bold text-sm px-4 py-2 rounded-xl hover:bg-amber-500 transition-colors">
                       <Plus size={14} /> {lang === 'fr' ? 'Créer ma boutique' : 'إنشاء متجري'}
@@ -683,8 +691,8 @@ export default function ProfilePage({ lang }: Props) {
               </div>
             )}
 
-            {/* Products section — vendeurs only */}
-            {isVendeur && boutique && (
+            {/* Products section — seller with boutique */}
+            {isSellerActive && boutique && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
@@ -716,7 +724,7 @@ export default function ProfilePage({ lang }: Props) {
                   ) : products.length === 0 ? (
                     <div className="text-center py-10">
                       <Package size={36} className="mx-auto text-gray-200 mb-3" />
-                      <p className="text-sm text-gray-500 mb-4">{lang === 'fr' ? 'Aucun produit pour l\'instant.' : 'لا توجد منتجات بعد.'}</p>
+                      <p className="text-sm text-gray-500 mb-4">{lang === 'fr' ? "Aucun produit pour l'instant." : 'لا توجد منتجات بعد.'}</p>
                       <button onClick={() => setShowModal(true)}
                         className="inline-flex items-center gap-1.5 bg-[#F8AC12] text-gray-900 font-bold text-sm px-4 py-2 rounded-xl hover:bg-amber-400 transition-colors">
                         <Plus size={14} /> {lang === 'fr' ? 'Ajouter mon premier produit' : 'أضف أول منتج'}
@@ -725,31 +733,12 @@ export default function ProfilePage({ lang }: Props) {
                   ) : (
                     <div className="space-y-2.5">
                       {products.map(p => (
-                        <ProductRow
-                          key={p.slug}
-                          product={p}
-                          lang={lang}
-                          onDelete={slug => setProducts(prev => prev.filter(x => x.slug !== slug))}
-                        />
+                        <ProductRow key={p.slug} product={p} lang={lang}
+                          onDelete={slug => setProducts(prev => prev.filter(x => x.slug !== slug))} />
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Info for non-vendeurs */}
-            {!isVendeur && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-                <p className="text-4xl mb-4">{user.role ? ROLE_EMOJI[user.role] : '👤'}</p>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">
-                  {lang === 'fr' ? `Compte ${roleLabel ?? 'actif'}` : `حساب ${roleLabel ?? 'نشط'}`}
-                </h3>
-                <p className="text-sm text-gray-500 max-w-sm mx-auto">
-                  {lang === 'fr'
-                    ? 'Votre compte est configuré. Gérez vos activités depuis l\'application mobile Mauri-Kilchi.'
-                    : 'حسابك مُعدّ. أدر نشاطاتك من تطبيق موريكيلشي المحمول.'}
-                </p>
               </div>
             )}
           </div>
