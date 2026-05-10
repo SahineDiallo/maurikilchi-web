@@ -18,8 +18,9 @@ export default function VerifyPage({ lang }: Props) {
   const { pending, clearPending, login, isAuthenticated, bootstrapDone } = useAuth()
   const isRtl = lang === 'ar'
 
+  // Only redirect if already authenticated before reaching this page (e.g. back button)
   useEffect(() => {
-    if (bootstrapDone && isAuthenticated) navigate('/', { replace: true })
+    if (bootstrapDone && isAuthenticated && !pending.phone) navigate('/', { replace: true })
   }, [bootstrapDone, isAuthenticated])
 
   const [digits,   setDigits]   = useState(['', '', '', '', '', ''])

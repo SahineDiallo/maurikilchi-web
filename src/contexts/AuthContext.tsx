@@ -1,5 +1,8 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import axios from 'axios'
 import { api } from '../lib/api'
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export interface AuthUser {
   id: string
@@ -51,19 +54,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pending, setPendingState] = useState<PendingAuth>(BLANK_PENDING)
 
   useEffect(() => {
-    const access = localStorage.getItem('access_token')
-    if (access) {
-      setAccessToken(access)
-      api.get('/auth/me/').then(res => {
+    const bootstrap = async () => {
+      const access  = localStorage.getItem('access_token')
+      const refresh = localStorage.getItem('refresh_token')
+
+      if (!access && !refresh) { setBootstrapDone(true); return }
+
+      try {
+        // If access token exists, try /me/ directly (interceptor will refresh on 401)
+        if (access) setAccessToken(access)
+        const res = await api.get('/auth/me/')
         setUser(res.data)
-      }).catch(() => {
+        // Sync the (possibly refreshed) token back into state
+        const current = localStorage.getItem('access_token')
+        if (current && current !== access) setAccessToken(current)
+      } catch {
+        // Even refresh failed — clear everything
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         setAccessToken(null)
-      }).finally(() => setBootstrapDone(true))
-    } else {
-      setBootstrapDone(true)
+        setUser(null)
+      } finally {
+        setBootstrapDone(true)
+      }
     }
+    bootstrap()
+  }, [])
+
+  // Handle forced logout from the API interceptor (refresh token expired)
+  useEffect(() => {
+    const handler = () => { setAccessToken(null); setUser(null) }
+    window.addEventListener('auth:logout', handler)
+    return () => window.removeEventListener('auth:logout', handler)
   }, [])
 
   const login = (access: string, refresh: string, u: AuthUser) => {
@@ -73,12 +95,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u)
   }
 
-  const logout = () => {
+  const logout = useCallback(() => {
+    const refresh = localStorage.getItem('refresh_token')
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     setAccessToken(null)
     setUser(null)
-  }
+    // Blacklist the refresh token on the backend (fire-and-forget)
+    if (refresh) {
+      axios.post(`${BASE_URL}/api/auth/logout/`, { refresh }).catch(() => {})
+    }
+  }, [])
 
   const setPending = (p: Partial<PendingAuth>) =>
     setPendingState(prev => ({ ...prev, ...p }))

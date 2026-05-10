@@ -7,11 +7,51 @@ export const api = axios.create({
   timeout: 10000,
 })
 
+// Attach access token to every request
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('access_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+// On 401: try to refresh once, then retry; on failure clear tokens
+let refreshing: Promise<string> | null = null
+
+api.interceptors.response.use(
+  res => res,
+  async error => {
+    const original = error.config
+    if (error.response?.status !== 401 || original._retry) {
+      return Promise.reject(error)
+    }
+    original._retry = true
+
+    try {
+      if (!refreshing) {
+        refreshing = axios
+          .post(`${BASE_URL}/api/auth/refresh/`, {
+            refresh: localStorage.getItem('refresh_token'),
+          })
+          .then(r => {
+            const newAccess: string = r.data.access
+            localStorage.setItem('access_token', newAccess)
+            if (r.data.refresh) localStorage.setItem('refresh_token', r.data.refresh)
+            return newAccess
+          })
+          .finally(() => { refreshing = null })
+      }
+
+      const newAccess = await refreshing
+      original.headers.Authorization = `Bearer ${newAccess}`
+      return api(original)
+    } catch {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      window.dispatchEvent(new Event('auth:logout'))
+      return Promise.reject(error)
+    }
+  },
+)
 
 export interface Boutique {
   id: number
