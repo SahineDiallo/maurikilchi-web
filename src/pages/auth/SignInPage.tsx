@@ -21,7 +21,7 @@ export default function SignInPage({ lang }: Props) {
   const [country, setCountry] = useState(DEFAULT_COUNTRY)
 
   useEffect(() => {
-    if (bootstrapDone && isAuthenticated) navigate('/', { replace: true })
+    if (bootstrapDone && isAuthenticated) navigate('/compte', { replace: true })
   }, [bootstrapDone, isAuthenticated])
   const [showCountries, setShowCountries] = useState(false)
   const [phone, setPhone] = useState('')

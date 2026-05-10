@@ -57,7 +57,7 @@ export default function RegisterPage({ lang }: Props) {
   const prefilledOtpSent = fromSignIn?.otpSent ?? false
 
   useEffect(() => {
-    if (bootstrapDone && isAuthenticated) navigate('/', { replace: true })
+    if (bootstrapDone && isAuthenticated) navigate('/compte', { replace: true })
   }, [bootstrapDone, isAuthenticated])
 
   // Step 1 = name, Step 2 = phone (skipped when prefilledOtpSent)

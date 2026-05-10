@@ -20,7 +20,7 @@ export default function VerifyPage({ lang }: Props) {
 
   // Only redirect if already authenticated before reaching this page (e.g. back button)
   useEffect(() => {
-    if (bootstrapDone && isAuthenticated && !pending.phone) navigate('/', { replace: true })
+    if (bootstrapDone && isAuthenticated && !pending.phone) navigate('/compte', { replace: true })
   }, [bootstrapDone, isAuthenticated])
 
   const [digits,   setDigits]   = useState(['', '', '', '', '', ''])
@@ -71,7 +71,7 @@ export default function VerifyPage({ lang }: Props) {
       login(res.data.access, res.data.refresh, res.data.user)
       clearPending()
       setSuccess(true)
-      setTimeout(() => navigate('/'), 1000)
+      setTimeout(() => navigate('/compte'), 1000)
     } catch (e: any) {
       setError(e.response?.data?.detail ?? (lang === 'fr' ? 'Code invalide ou expiré.' : 'رمز غير صالح أو منتهي الصلاحية.'))
     } finally {
