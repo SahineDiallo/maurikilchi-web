@@ -5,8 +5,14 @@ import { type Lang } from '../constants/i18n'
 import { CATEGORIES } from '../constants/categories'
 import { useAuth } from '../contexts/AuthContext'
 
-const ROLE_EMOJI: Record<string, string> = {
-  vendeur: '🏪', livreur: '🏍️', voyageur: '🚌', maurigo: '🚕',
+const TRANSPORT_EMOJI: Record<string, string> = {
+  livreur: '🏍️', voyageur: '🚌', maurigo: '🚕',
+}
+
+function userEmoji(user: { seller_profile?: { is_active?: boolean } | null; transport?: { type?: string } | null }) {
+  if (user.seller_profile?.is_active) return '🏪'
+  if (user.transport?.type) return TRANSPORT_EMOJI[user.transport.type] ?? null
+  return null
 }
 
 const SERVICES = [
@@ -206,14 +212,14 @@ export default function Navbar({ lang, onLangToggle }: Props) {
                       </div>
                   }
                   <span className="hidden md:block text-sm font-medium text-gray-800 max-w-[72px] truncate">{user.first_name}</span>
-                  {user.role && <span className="text-sm">{ROLE_EMOJI[user.role] ?? '👤'}</span>}
+                  {userEmoji(user) && <span className="text-sm">{userEmoji(user)}</span>}
                   <ChevronDown size={12} className="text-gray-400" />
                 </button>
                 {userMenuOpen && (
                   <div className={`absolute top-full mt-2 w-52 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden ${isRtl ? 'left-0' : 'right-0'}`}>
                     <div className="px-4 py-3 border-b border-gray-100 bg-amber-50">
                       <p className="font-semibold text-sm text-gray-900">{user.first_name} {user.last_name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{user.role && ROLE_EMOJI[user.role]} {user.phone}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{userEmoji(user)} {user.phone}</p>
                     </div>
                     <Link to="/compte" onClick={() => setUserMenuOpen(false)}
                       className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
