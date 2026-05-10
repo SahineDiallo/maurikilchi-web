@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, X, Store, Plus, AlertCircle, Clock, XCircle } from 'lucide-react'
+import { Check, X, Store, Plus, AlertCircle, Clock, XCircle, Eye, EyeOff, Trash2, MoreVertical } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import { type Lang } from '../constants/i18n'
@@ -29,11 +29,44 @@ function Spinner() {
   return <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin inline-block" />
 }
 
-interface Props { lang: Lang; hasBoutique: boolean }
+interface BoutiqueInfo {
+  slug: string
+  name: string
+  image_url: string | null
+  is_active: boolean
+}
 
-export default function ActivitiesSection({ lang, hasBoutique }: Props) {
+interface Props {
+  lang: Lang
+  hasBoutique: boolean
+  boutique?: BoutiqueInfo | null
+  boutiqueActing?: boolean
+  onToggleBoutique?: () => void
+  onDeleteBoutique?: () => void
+}
+
+export default function ActivitiesSection({
+  lang, hasBoutique,
+  boutique, boutiqueActing, onToggleBoutique, onDeleteBoutique,
+}: Props) {
   const { user, login } = useAuth()
   const isRtl = lang === 'ar'
+
+  const [showTransportSetup,    setShowTransportSetup]    = useState(false)
+  const [boutiqueMenuOpen,      setBoutiqueMenuOpen]      = useState(false)
+  const [confirmDeleteBoutique, setConfirmDeleteBoutique] = useState(false)
+  const boutiqueMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (boutiqueMenuRef.current && !boutiqueMenuRef.current.contains(e.target as Node)) {
+        setBoutiqueMenuOpen(false)
+        setConfirmDeleteBoutique(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const [sellerLoading,  setSellerLoading]  = useState(false)
   const [sellerErr,      setSellerErr]      = useState('')
@@ -101,7 +134,7 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
 
       await api.post('/auth/me/transport/', body)
       await refreshUser()
-      setEnableType(null)
+      setEnableType(null); setShowTransportSetup(false)
       setVehicle(''); setTrajetDepart(''); setTrajetDest(''); setWilaya(''); setPlate('')
     } catch (e: any) {
       setTransportErr(e.response?.data?.detail ?? (lang === 'fr' ? 'Erreur.' : 'خطأ.'))
@@ -121,7 +154,7 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
   }
 
   const cancelEnable = () => {
-    setEnableType(null); setTransportErr('')
+    setEnableType(null); setTransportErr(''); setShowTransportSetup(false)
     setVehicle(''); setTrajetDepart(''); setTrajetDest(''); setWilaya(''); setPlate('')
   }
 
@@ -145,9 +178,9 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="px-4 py-4 border-b border-gray-100">
         <h3 className="font-bold text-gray-900">{lang === 'fr' ? 'Mes activités' : 'نشاطاتي'}</h3>
         <p className="text-xs text-gray-400 mt-0.5">
           {lang === 'fr'
@@ -156,7 +189,7 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
         </p>
       </div>
 
-      <div className="px-6 py-5 space-y-5">
+      <div className="px-4 py-5 space-y-5">
 
         {/* ── Commerce / Seller ─────────────────────────────────────────── */}
         <div>
@@ -234,6 +267,116 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
                 className="shrink-0 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-2 rounded-lg transition-colors">
                 {lang === 'fr' ? 'Créer →' : 'إنشاء →'}
               </Link>
+            </div>
+          )}
+
+          {/* Boutique card — when seller active and boutique exists */}
+          {seller?.is_active && boutique && (
+            <div className="mt-3 rounded-xl border border-gray-200">
+
+              {/* Inactive banner */}
+              {!boutique.is_active && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border-b border-orange-200 text-xs font-medium text-orange-700 rounded-t-xl">
+                  <EyeOff size={12} />
+                  {lang === 'fr'
+                    ? 'Boutique désactivée — invisible au public.'
+                    : 'المتجر معطّل — غير مرئي للعموم.'}
+                </div>
+              )}
+
+              {/* Boutique row */}
+              <div className="flex items-center gap-3 px-3 py-3">
+                <div className={`w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 ${!boutique.is_active ? 'opacity-50' : ''}`}>
+                  {boutique.image_url
+                    ? <img src={boutique.image_url} alt={boutique.name} className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-gray-300"><Store size={16} /></div>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-gray-900 truncate">{boutique.name}</p>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    boutique.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {boutique.is_active ? (lang === 'fr' ? 'Active' : 'نشط') : (lang === 'fr' ? 'Désactivée' : 'معطّل')}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Link
+                    to={`/boutique/${boutique.slug}`}
+                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 border border-amber-200 rounded-lg px-2.5 py-1.5 hover:bg-amber-50 transition-colors"
+                  >
+                    {lang === 'fr' ? 'Gérer →' : 'إدارة →'}
+                  </Link>
+
+                  {/* ⋮ ellipsis dropdown */}
+                  <div ref={boutiqueMenuRef} className="relative">
+                    <button
+                      onClick={() => { setBoutiqueMenuOpen(o => !o); setConfirmDeleteBoutique(false) }}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                    >
+                      <MoreVertical size={15} />
+                    </button>
+
+                    {boutiqueMenuOpen && (
+                      <div className="absolute right-0 top-10 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-20">
+
+                        {/* Deactivate / Reactivate */}
+                        <button
+                          onClick={onToggleBoutique}
+                          disabled={boutiqueActing}
+                          className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 rounded-t-xl
+                            ${boutique.is_active ? 'text-orange-600' : 'text-green-700'}`}
+                        >
+                          {boutiqueActing && !confirmDeleteBoutique
+                            ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            : boutique.is_active ? <EyeOff size={14} /> : <Eye size={14} />}
+                          {boutique.is_active
+                            ? (lang === 'fr' ? 'Désactiver la boutique' : 'تعطيل المتجر')
+                            : (lang === 'fr' ? 'Réactiver la boutique' : 'إعادة تفعيل المتجر')}
+                        </button>
+
+                        <div className="h-px bg-gray-100" />
+
+                        {/* Delete — two-step */}
+                        {!confirmDeleteBoutique ? (
+                          <button
+                            onClick={() => setConfirmDeleteBoutique(true)}
+                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors rounded-b-xl"
+                          >
+                            <Trash2 size={14} />
+                            {lang === 'fr' ? 'Supprimer la boutique' : 'حذف المتجر'}
+                          </button>
+                        ) : (
+                          <div className="px-4 py-3 bg-red-50 space-y-2.5 rounded-b-xl">
+                            <p className="text-xs text-red-700 font-medium leading-snug">
+                              {lang === 'fr'
+                                ? 'Boutique et tous les produits seront définitivement supprimés.'
+                                : 'المتجر وجميع المنتجات ستُحذف نهائياً.'}
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => { onDeleteBoutique?.(); setConfirmDeleteBoutique(false); setBoutiqueMenuOpen(false) }}
+                                disabled={boutiqueActing}
+                                className="flex-1 flex items-center justify-center text-xs font-bold text-white bg-red-500 hover:bg-red-600 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                              >
+                                {boutiqueActing
+                                  ? <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                                  : (lang === 'fr' ? 'Confirmer' : 'تأكيد')}
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteBoutique(false)}
+                                className="flex-1 text-xs font-semibold text-gray-600 hover:text-gray-800 bg-white rounded-lg py-1.5 border border-gray-200 transition-colors"
+                              >
+                                {lang === 'fr' ? 'Annuler' : 'إلغاء'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -315,8 +458,34 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
               </div>
             </div>
           ) : (
-            /* No transport active — show 3 option cards */
+            /* No transport active */
             <div className="space-y-3">
+
+              {/* Collapsed row — always visible */}
+              <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50">
+                <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 text-xl">
+                  🚗
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-semibold text-sm text-gray-900">
+                    {lang === 'fr' ? 'Transport' : 'نقل'}
+                  </span>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {lang === 'fr' ? 'Livreur, Long Voyage ou Car Rapide.' : 'موصّل، سفر طويل أو كار رابيد.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setShowTransportSetup(v => !v); setEnableType(null); setTransportErr('') }}
+                  className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs font-bold px-3 py-2 rounded-xl transition-colors"
+                >
+                  <Plus size={13} />
+                  {lang === 'fr' ? 'Activer' : 'تفعيل'}
+                </button>
+              </div>
+
+              {/* Expanded: type selection + form */}
+              {showTransportSetup && (
+              <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2.5">
                 {TRANSPORT_OPTIONS.map(opt => {
                   const isSelected = enableType === opt.key
@@ -463,6 +632,8 @@ export default function ActivitiesSection({ lang, hasBoutique }: Props) {
                     </button>
                   </div>
                 </div>
+              )}
+              </div>
               )}
             </div>
           )}

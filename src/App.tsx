@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import type { Lang } from './constants/i18n'
 import { AuthProvider } from './contexts/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
@@ -18,14 +19,17 @@ import CarRapidePage from './pages/services/CarRapidePage'
 import LongVoyagePage from './pages/services/LongVoyagePage'
 import ProfilePage from './pages/ProfilePage'
 import CreateBoutiquePage from './pages/CreateBoutiquePage'
+import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
   const [lang, setLang] = useState<Lang>('fr')
 
   return (
-    <AuthProvider>
-      <AppShell lang={lang} setLang={setLang} />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppShell lang={lang} setLang={setLang} />
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 
@@ -35,8 +39,8 @@ function AppShell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void })
       <ScrollToTop />
       <Routes>
         {/* Auth pages — no Navbar/Footer */}
-        <Route path="/connexion"   element={<SignInPage lang={lang} />} />
-        <Route path="/inscription" element={<RegisterPage lang={lang} />} />
+        <Route path="/connexion"    element={<SignInPage lang={lang} />} />
+        <Route path="/inscription"  element={<RegisterPage lang={lang} />} />
         <Route path="/verification" element={<VerifyPage lang={lang} />} />
 
         {/* Main app pages */}
@@ -44,16 +48,18 @@ function AppShell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void })
           <>
             <Navbar lang={lang} onLangToggle={() => setLang(lang === 'fr' ? 'ar' : 'fr')} />
             <Routes>
-              <Route path="/" element={<HomePage lang={lang} />} />
-              <Route path="/explorer" element={<ExplorePage lang={lang} />} />
-              <Route path="/produit/:slug" element={<ProductDetailPage lang={lang} />} />
-              <Route path="/boutiques" element={<BoutiquesListPage lang={lang} />} />
-              <Route path="/boutique/:slug" element={<BoutiquePage lang={lang} />} />
-              <Route path="/livraison" element={<LivraisonPage lang={lang} />} />
-              <Route path="/car-rapide" element={<CarRapidePage lang={lang} />} />
-              <Route path="/long-voyage" element={<LongVoyagePage lang={lang} />} />
-              <Route path="/compte" element={<ProfilePage lang={lang} />} />
-              <Route path="/boutique/create-boutique" element={<CreateBoutiquePage lang={lang} />} />
+              <Route path="/"                          element={<HomePage lang={lang} />} />
+              <Route path="/explorer"                  element={<ExplorePage lang={lang} />} />
+              <Route path="/produit/:slug"             element={<ProductDetailPage lang={lang} />} />
+              <Route path="/boutiques"                 element={<BoutiquesListPage lang={lang} />} />
+              <Route path="/boutique/:slug"            element={<BoutiquePage lang={lang} />} />
+              <Route path="/livraison"                 element={<LivraisonPage lang={lang} />} />
+              <Route path="/car-rapide"                element={<CarRapidePage lang={lang} />} />
+              <Route path="/long-voyage"               element={<LongVoyagePage lang={lang} />} />
+              <Route path="/compte"                    element={<ProfilePage lang={lang} />} />
+              <Route path="/boutique/create-boutique"  element={<CreateBoutiquePage lang={lang} />} />
+              {/* 404 catch-all */}
+              <Route path="*" element={<NotFoundPage lang={lang} />} />
             </Routes>
             <Footer lang={lang} />
           </>

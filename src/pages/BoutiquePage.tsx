@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useSeo } from '../hooks/useSeo'
 import {
   ArrowLeft, MapPin, Search, X,
-  Share2, CheckCircle2, Phone,
+  Share2, CheckCircle2, Phone, Plus, Trash2, Edit2, Image as ImgIcon,
 } from 'lucide-react'
 import { type Lang } from '../constants/i18n'
 import { api, type Boutique, type Product } from '../lib/api'
 import ProductCard from '../components/ProductCard'
+import { useAuth } from '../contexts/AuthContext'
+import ProductModal, { type Category as MgmtCategory } from '../components/ProductModal'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TYPE_EMOJI: Record<string, string> = {
@@ -28,6 +30,156 @@ function WaIcon({ size = 16 }: { size?: number }) {
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
+  )
+}
+
+// ─── Edit boutique modal ──────────────────────────────────────────────────────
+function EditBoutiqueModal({
+  boutique, lang, onClose, onUpdated,
+}: {
+  boutique: Boutique
+  lang: Lang
+  onClose: () => void
+  onUpdated: (b: Boutique) => void
+}) {
+  const isRtl = lang === 'ar'
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const [form, setForm] = useState({
+    name:          boutique.name,
+    description:   boutique.description,
+    phone_number:  boutique.phone_number,
+    whatsap_number: boutique.whatsap_number,
+  })
+  const [imageFile,  setImageFile]  = useState<File | null>(null)
+  const [preview,    setPreview]    = useState<string | null>(boutique.image_url)
+  const [loading,    setLoading]    = useState(false)
+  const [err,        setErr]        = useState('')
+
+  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  const pickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return
+    e.target.value = ''
+    setImageFile(f)
+    setPreview(URL.createObjectURL(f))
+  }
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.name.trim()) { setErr(lang === 'fr' ? 'Le nom est requis.' : 'الاسم مطلوب.'); return }
+    setErr(''); setLoading(true)
+    try {
+      const res = await api.patch(`/boutiques/${boutique.slug}/`, {
+        name:           form.name.trim(),
+        description:    form.description.trim(),
+        phone_number:   form.phone_number.trim(),
+        whatsap_number: form.whatsap_number.trim(),
+      })
+      let updated: Boutique = res.data
+
+      if (imageFile) {
+        try {
+          const fd = new FormData()
+          fd.append('image', imageFile)
+          const imgRes = await api.post(`/boutiques/${boutique.slug}/image/`, fd)
+          updated = { ...updated, image_url: imgRes.data.image_url }
+        } catch { /* image non-blocking */ }
+      }
+
+      onUpdated(updated)
+      onClose()
+    } catch (e: any) {
+      setErr(e.response?.data?.detail ?? (lang === 'fr' ? 'Erreur lors de la mise à jour.' : 'خطأ في التحديث.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div dir={isRtl ? 'rtl' : 'ltr'} className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+          <h2 className="font-bold text-gray-900">{lang === 'fr' ? 'Modifier la boutique' : 'تعديل المتجر'}</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+            <X size={15} />
+          </button>
+        </div>
+
+        <form onSubmit={submit} className="px-6 py-5 space-y-4">
+
+          {/* Image */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              {lang === 'fr' ? 'Photo de la boutique' : 'صورة المتجر'}
+            </label>
+            <button type="button" onClick={() => fileRef.current?.click()}
+              className="w-full h-36 rounded-xl border-2 border-dashed border-gray-200 hover:border-amber-400 bg-gray-50 hover:bg-amber-50 flex flex-col items-center justify-center gap-2 relative overflow-hidden transition-colors">
+              {preview
+                ? <img src={preview} className="absolute inset-0 w-full h-full object-cover rounded-xl" alt="" />
+                : <><ImgIcon size={24} className="text-gray-300" />
+                    <span className="text-xs text-gray-400">{lang === 'fr' ? 'Changer la photo' : 'تغيير الصورة'}</span></>}
+              {preview && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-xl">
+                  <span className="text-white text-xs font-semibold">{lang === 'fr' ? 'Changer' : 'تغيير'}</span>
+                </div>
+              )}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pickImage} />
+          </div>
+
+          {/* Name */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              {lang === 'fr' ? 'Nom *' : 'الاسم *'}
+            </label>
+            <input type="text" required value={form.name} onChange={e => set('name', e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all" />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              {lang === 'fr' ? 'Description' : 'الوصف'}
+            </label>
+            <textarea rows={3} value={form.description} onChange={e => set('description', e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all resize-none" />
+          </div>
+
+          {/* Phone + WhatsApp */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                {lang === 'fr' ? 'Téléphone' : 'هاتف'}
+              </label>
+              <input type="tel" value={form.phone_number} onChange={e => set('phone_number', e.target.value)}
+                placeholder="+222..."
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                WhatsApp
+              </label>
+              <input type="tel" value={form.whatsap_number} onChange={e => set('whatsap_number', e.target.value)}
+                placeholder="+222..."
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all" />
+            </div>
+          </div>
+
+          {err && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2">{err}</p>}
+
+          <button type="submit" disabled={loading}
+            className="w-full py-3 rounded-xl bg-[#F8AC12] text-gray-900 font-bold text-sm hover:bg-amber-400 transition-colors disabled:opacity-60">
+            {loading
+              ? <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-gray-900/20 border-t-gray-900/70 rounded-full animate-spin" />
+                  {lang === 'fr' ? 'Enregistrement…' : 'جارٍ الحفظ…'}
+                </span>
+              : (lang === 'fr' ? 'Enregistrer les modifications' : 'حفظ التغييرات')}
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }
 
@@ -62,10 +214,17 @@ export default function BoutiquePage({ lang }: Props) {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const isRtl = lang === 'ar'
+  const { user } = useAuth()
 
   const [boutique, setBoutique] = useState<Boutique | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Owner management state
+  const [showModal,    setShowModal]    = useState(false)
+  const [showEdit,     setShowEdit]     = useState(false)
+  const [mgmtCats,     setMgmtCats]    = useState<MgmtCategory[]>([])
+  const [deletingSlug, setDeletingSlug] = useState<string | null>(null)
 
   useSeo({
     title      : boutique ? `${boutique.name} — Boutique en ligne Mauritanie` : 'Boutique en ligne — Maurikilchi',
@@ -135,6 +294,24 @@ export default function BoutiquePage({ lang }: Props) {
       })
       .catch(() => {})
       .finally(() => setLoadingMore(false))
+  }
+
+  const isOwner = !!user && !!boutique && String(boutique.owner.id) === String(user.id)
+
+  // Fetch categories once we know the user is the owner
+  useEffect(() => {
+    if (!isOwner) return
+    api.get('/categories/').then(r => {
+      setMgmtCats(r.data?.results ?? r.data ?? [])
+    }).catch(() => {})
+  }, [isOwner])
+
+  const deleteProduct = async (productSlug: string) => {
+    setDeletingSlug(productSlug)
+    try {
+      await api.delete(`/products/${productSlug}/`)
+      setProducts(prev => prev.filter(p => p.slug !== productSlug))
+    } catch { } finally { setDeletingSlug(null) }
   }
 
   const shareUrl = () => {
@@ -373,6 +550,24 @@ export default function BoutiquePage({ lang }: Props) {
               )}
             </div>
 
+            {/* Owner management bar */}
+            {isOwner && (
+              <div className="flex items-center gap-2 mb-4">
+                  <button
+                    onClick={() => setShowEdit(true)}
+                    className="flex items-center gap-1.5 border border-gray-200 text-gray-700 font-bold text-xs px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <Edit2 size={12} /> {lang === 'fr' ? 'Modifier' : 'تعديل'}
+                  </button>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="flex items-center gap-1.5 bg-[#F8AC12] text-gray-900 font-bold text-xs px-3 py-2 rounded-xl hover:bg-amber-400 transition-colors"
+                  >
+                    <Plus size={13} /> {lang === 'fr' ? 'Ajouter un produit' : 'إضافة منتج'}
+                  </button>
+              </div>
+            )}
+
             {/* Sticky search + category tabs */}
             <div className="sticky top-[100px] z-20 bg-white rounded-2xl border border-gray-100 shadow-sm mb-5 overflow-hidden">
               <div className="px-4 pt-3 pb-0">
@@ -448,7 +643,22 @@ export default function BoutiquePage({ lang }: Props) {
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
-                  {filtered.map(p => <ProductCard key={p.id ?? p.slug} item={p} />)}
+                  {filtered.map(p => (
+                    <div key={p.id ?? p.slug} className="relative group/card">
+                      <ProductCard item={p} />
+                      {isOwner && (
+                        <button
+                          onClick={() => deleteProduct(p.slug)}
+                          disabled={deletingSlug === p.slug}
+                          className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/90 border border-red-200 flex items-center justify-center text-red-500 hover:bg-red-50 transition-all shadow-sm disabled:opacity-50 opacity-0 group-hover/card:opacity-100"
+                        >
+                          {deletingSlug === p.slug
+                            ? <span className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                            : <Trash2 size={12} />}
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
                 {nextUrl && !search && activeCat === '__all__' && (
@@ -467,6 +677,27 @@ export default function BoutiquePage({ lang }: Props) {
           </main>
         </div>
       </div>
+
+      {/* Product creation modal — owner only */}
+      {isOwner && showModal && boutique && (
+        <ProductModal
+          boutiqueId={boutique.id}
+          categories={mgmtCats}
+          lang={lang}
+          onClose={() => setShowModal(false)}
+          onCreated={p => setProducts(prev => [p as unknown as Product, ...prev])}
+        />
+      )}
+
+      {/* Edit boutique modal — owner only */}
+      {isOwner && showEdit && boutique && (
+        <EditBoutiqueModal
+          boutique={boutique}
+          lang={lang}
+          onClose={() => setShowEdit(false)}
+          onUpdated={updated => setBoutique(updated)}
+        />
+      )}
     </div>
   )
 }
