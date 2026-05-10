@@ -105,17 +105,23 @@ export default function RegisterPage({ lang }: Props) {
   const [loading, setLoading]     = useState(false)
 
   const needsStep3 = role === 'livreur' || role === 'voyageur' || role === 'maurigo'
-  const totalSteps = needsStep3 ? 3 : 2
+  // When phone is pre-filled, step 2 is skipped — adjust visible step count and display index
+  const totalSteps = prefilledOtpSent ? (needsStep3 ? 2 : 1) : (needsStep3 ? 3 : 2)
+  const displayStep = prefilledOtpSent && step === 3 ? 2 : step
   const roleInfo = ROLES.find(r => r.key === role)!
 
   const selectRole = (r: Role) => {
     setRole(r); setStep(1); setVehicle(''); setTrajetDepart(''); setTrajetDest(''); setWilaya('')
-    setErr(''); setFirstName(''); setLastName(''); setPhone(''); setPhase('form')
+    setErr(''); setFirstName(''); setLastName('')
+    if (!prefilledOtpSent) setPhone('')  // keep pre-filled phone when coming from sign-in
+    setPhase('form')
   }
 
   const handleBack = () => {
     if (phase === 'role-pick') { navigate(-1); return }
     if (step === 1) { setPhase('role-pick'); return }
+    // When phone is pre-filled step 2 is skipped, so step 3 goes back to step 1
+    if (step === 3 && prefilledOtpSent) { setStep(1); return }
     setStep(s => (s - 1) as any)
   }
 
@@ -124,7 +130,14 @@ export default function RegisterPage({ lang }: Props) {
       setErr(lang === 'fr' ? 'Veuillez renseigner votre nom complet.' : 'يرجى إدخال اسمك الكامل.')
       return
     }
-    setErr(''); setStep(2)
+    setErr('')
+    if (prefilledOtpSent) {
+      // Phone already known from sign-in — skip the phone step entirely
+      if (needsStep3) setStep(3)
+      else void onSubmit()
+    } else {
+      setStep(2)
+    }
   }
 
   const goStep3 = () => {
@@ -239,9 +252,9 @@ export default function RegisterPage({ lang }: Props) {
               <div className="flex items-center gap-1.5 flex-1">
                 {Array.from({ length: totalSteps }).map((_, i) => (
                   <div key={i} className="h-1.5 rounded-full transition-all"
-                    style={{ width: i + 1 <= step ? 36 : 20, background: i + 1 <= step ? '#F8AC12' : '#e5e7eb' }} />
+                    style={{ width: i + 1 <= displayStep ? 36 : 20, background: i + 1 <= displayStep ? '#F8AC12' : '#e5e7eb' }} />
                 ))}
-                <span className="text-xs text-gray-400 ml-1">{step}/{totalSteps}</span>
+                <span className="text-xs text-gray-400 ml-1">{displayStep}/{totalSteps}</span>
               </div>
               {/* Role badge */}
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-200">
@@ -378,7 +391,7 @@ export default function RegisterPage({ lang }: Props) {
                   style={{ background: '#F8AC12', color: '#0D0D0D' }}>
                   {loading
                     ? <span className="w-5 h-5 border-2 border-black/20 border-t-black/70 rounded-full animate-spin" />
-                    : <><span>{lang === 'fr' ? 'Recevoir le code' : 'استقبال الرمز'}</span><ArrowRight size={16} /></>
+                    : <><span>{lang === 'fr' ? (prefilledOtpSent ? 'Créer mon compte' : 'Recevoir le code') : (prefilledOtpSent ? 'إنشاء حسابي' : 'استقبال الرمز')}</span><ArrowRight size={16} /></>
                   }
                 </button>
               </>
@@ -423,7 +436,7 @@ export default function RegisterPage({ lang }: Props) {
                   style={{ background: '#F8AC12', color: '#0D0D0D' }}>
                   {loading
                     ? <span className="w-5 h-5 border-2 border-black/20 border-t-black/70 rounded-full animate-spin" />
-                    : <><span>{lang === 'fr' ? 'Recevoir le code' : 'استقبال الرمز'}</span><ArrowRight size={16} /></>
+                    : <><span>{lang === 'fr' ? (prefilledOtpSent ? 'Créer mon compte' : 'Recevoir le code') : (prefilledOtpSent ? 'إنشاء حسابي' : 'استقبال الرمز')}</span><ArrowRight size={16} /></>
                   }
                 </button>
               </>
@@ -455,7 +468,7 @@ export default function RegisterPage({ lang }: Props) {
                   style={{ background: '#F8AC12', color: '#0D0D0D' }}>
                   {loading
                     ? <span className="w-5 h-5 border-2 border-black/20 border-t-black/70 rounded-full animate-spin" />
-                    : <><span>{lang === 'fr' ? 'Recevoir le code' : 'استقبال الرمز'}</span><ArrowRight size={16} /></>
+                    : <><span>{lang === 'fr' ? (prefilledOtpSent ? 'Créer mon compte' : 'Recevoir le code') : (prefilledOtpSent ? 'إنشاء حسابي' : 'استقبال الرمز')}</span><ArrowRight size={16} /></>
                   }
                 </button>
               </>
