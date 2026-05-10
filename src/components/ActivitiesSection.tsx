@@ -15,7 +15,6 @@ const WILAYAS = [
 const VEHICLES = [
   { key: 'moto',          emoji: '🏍️', fr: 'Moto',          ar: 'دراجة نارية' },
   { key: 'thiouk_thiouk', emoji: '🛺',  fr: 'Thiouk Thiouk', ar: 'ثيوك ثيوك'  },
-  { key: 'auto',          emoji: '🚗',  fr: 'Auto',          ar: 'سيارة'       },
 ]
 
 type TransportType = 'livreur' | 'voyageur' | 'maurigo'
