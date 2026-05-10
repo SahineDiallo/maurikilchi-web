@@ -37,9 +37,15 @@ export default function SignInPage({ lang }: Props) {
     setErr(''); setLoading(true)
     const full = `${country.dialCode}${phone}`
     try {
-      await api.post('/auth/send-otp/', { phone: full })
-      setPending({ phone: full })
-      navigate('/verification')
+      const res = await api.post('/auth/send-otp/', { phone: full })
+      if (res.data.user_exists === false) {
+        // New number — send them to registration with the phone pre-filled
+        // OTP already sent so registration can skip its own OTP step
+        navigate('/inscription', { state: { phone, dialCode: country.dialCode, otpSent: true } })
+      } else {
+        setPending({ phone: full })
+        navigate('/verification')
+      }
     } catch (e: any) {
       setErr(e.response?.data?.detail ?? (lang === 'fr' ? "Erreur d'envoi du code." : 'حدث خطأ في إرسال الرمز.'))
     } finally {

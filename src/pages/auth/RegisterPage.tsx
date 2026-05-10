@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ChevronDown, Check } from 'lucide-react'
 import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
@@ -69,9 +69,15 @@ function BrandPanel({ lang, isRtl: _isRtl }: { lang: Lang; isRtl: boolean }) {
 }
 
 export default function RegisterPage({ lang }: Props) {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
   const { setPending, isAuthenticated, bootstrapDone } = useAuth()
   const isRtl = lang === 'ar'
+
+  // Arriving from sign-in with an unknown number — OTP already sent
+  const fromSignIn = location.state as { phone?: string; dialCode?: string; otpSent?: boolean } | null
+  const prefilledPhone   = fromSignIn?.phone    ?? ''
+  const prefilledOtpSent = fromSignIn?.otpSent  ?? false
 
   useEffect(() => {
     if (bootstrapDone && isAuthenticated) navigate('/', { replace: true })
@@ -80,12 +86,17 @@ export default function RegisterPage({ lang }: Props) {
   const [phase, setPhase] = useState<'role-pick' | 'form'>('role-pick')
   const [role, setRole] = useState<Role>('vendeur')
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [country, setCountry] = useState(DEFAULT_COUNTRY)
+  const [country, setCountry] = useState(() => {
+    if (fromSignIn?.dialCode) {
+      return COUNTRIES.find(c => c.dialCode === fromSignIn.dialCode) ?? DEFAULT_COUNTRY
+    }
+    return DEFAULT_COUNTRY
+  })
   const [showCountries, setShowCountries] = useState(false)
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName]   = useState('')
-  const [phone, setPhone]         = useState('')
+  const [phone, setPhone]         = useState(prefilledPhone)
   const [vehicle, setVehicle]     = useState('')
   const [trajetDepart, setTrajetDepart] = useState('')
   const [trajetDest, setTrajetDest]     = useState('')
@@ -130,16 +141,20 @@ export default function RegisterPage({ lang }: Props) {
     if (role === 'voyageur' && (!trajetDepart || !trajetDest)) { setErr(lang === 'fr' ? 'Renseignez votre trajet.' : 'أدخل مسارك.'); return }
     if (role === 'maurigo' && !wilaya) { setErr(lang === 'fr' ? 'Choisissez votre wilaya.' : 'اختر ولايتك.'); return }
     setErr(''); setLoading(true)
-    const full = `${country.dialCode}${phone}`
+    const full = prefilledOtpSent ? `${country.dialCode}${phone}` : `${country.dialCode}${phone}`
+    const pending = {
+      phone: full, firstName: firstName.trim(), lastName: lastName.trim(), role,
+      vehicle: role === 'livreur' ? vehicle : '',
+      trajetDepart: role === 'voyageur' ? trajetDepart : '',
+      trajetDest: role === 'voyageur' ? trajetDest : '',
+      wilaya: role === 'maurigo' ? wilaya : '',
+    }
     try {
-      await api.post('/auth/send-otp/', { phone: full })
-      setPending({
-        phone: full, firstName: firstName.trim(), lastName: lastName.trim(), role,
-        vehicle: role === 'livreur' ? vehicle : '',
-        trajetDepart: role === 'voyageur' ? trajetDepart : '',
-        trajetDest: role === 'voyageur' ? trajetDest : '',
-        wilaya: role === 'maurigo' ? wilaya : '',
-      })
+      if (!prefilledOtpSent) {
+        // Normal registration — send OTP now
+        await api.post('/auth/send-otp/', { phone: full })
+      }
+      setPending(pending)
       navigate('/verification')
     } catch (e: any) {
       setErr(e.response?.data?.detail ?? (lang === 'fr' ? "Erreur d'envoi du code." : 'حدث خطأ.'))
@@ -308,10 +323,11 @@ export default function RegisterPage({ lang }: Props) {
                         </div>
                       )}
                     </div>
-                    <input autoFocus type="tel" value={phone}
-                      onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    <input autoFocus={!prefilledOtpSent} type="tel" value={phone}
+                      onChange={e => !prefilledOtpSent && setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                      readOnly={prefilledOtpSent}
                       placeholder="XX XX XX XX"
-                      className="flex-1 h-12 px-4 bg-transparent text-base font-semibold text-gray-900 tracking-widest placeholder-gray-300 focus:outline-none"
+                      className={`flex-1 h-12 px-4 bg-transparent text-base font-semibold text-gray-900 tracking-widest placeholder-gray-300 focus:outline-none ${prefilledOtpSent ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </div>
                 </div>

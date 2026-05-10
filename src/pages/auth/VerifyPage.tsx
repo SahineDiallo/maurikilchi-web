@@ -65,13 +65,17 @@ export default function VerifyPage({ lang }: Props) {
     setError(''); setLoading(true)
     try {
       const payload: any = { phone: pending.phone, code }
-      if (pending.firstName)    payload.first_name         = pending.firstName
-      if (pending.lastName)     payload.last_name          = pending.lastName
-      if (pending.role)         payload.role               = pending.role
-      if (pending.vehicle)      payload.vehicle_type       = pending.vehicle
-      if (pending.trajetDepart) payload.trajet_depart      = pending.trajetDepart
-      if (pending.trajetDest)   payload.trajet_destination = pending.trajetDest
-      if (pending.wilaya)       payload.wilaya             = pending.wilaya
+      // Only send registration fields when it's a registration flow (firstName is set)
+      const isRegistration = !!pending.firstName
+      if (isRegistration) {
+        payload.first_name         = pending.firstName
+        payload.last_name          = pending.lastName
+        payload.role               = pending.role
+        if (pending.vehicle)       payload.vehicle_type       = pending.vehicle
+        if (pending.trajetDepart)  payload.trajet_depart      = pending.trajetDepart
+        if (pending.trajetDest)    payload.trajet_destination = pending.trajetDest
+        if (pending.wilaya)        payload.wilaya             = pending.wilaya
+      }
       const res = await api.post<{ access: string; refresh: string; user: any }>('/auth/verify-otp/', payload)
       login(res.data.access, res.data.refresh, res.data.user)
       clearPending()
