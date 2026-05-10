@@ -4,28 +4,48 @@ import { api } from '../lib/api'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+export interface SellerProfile {
+  is_active: boolean
+  created_at: string
+}
+
+export interface TransportProfile {
+  type: 'livreur' | 'voyageur' | 'maurigo'
+  // livreur
+  vehicle_type?: string
+  is_online?: boolean
+  rating?: number
+  deliveries_count?: number
+  zone?: string
+  // voyageur
+  trajet_depart?: string
+  trajet_destination?: string
+  // maurigo
+  wilaya?: string
+  status?: 'pending' | 'approved' | 'rejected'
+  plate_number?: string
+  car_brand?: string
+  car_year?: number | null
+  car_photo_url?: string | null
+  driver_photo_url?: string | null
+  license_photo_url?: string | null
+}
+
 export interface AuthUser {
   id: string
   phone: string
   first_name: string
   last_name: string
   avatar_url?: string | null
-  role?: string
-  vehicle_type?: string
-  trajet_depart?: string
-  trajet_destination?: string
-  wilaya?: string
+  is_admin?: boolean
+  seller_profile?: SellerProfile | null
+  transport?: TransportProfile | null
 }
 
 interface PendingAuth {
   phone: string
   firstName: string
   lastName: string
-  role: string
-  vehicle: string
-  trajetDepart: string
-  trajetDest: string
-  wilaya: string
 }
 
 interface AuthContextValue {
@@ -42,7 +62,6 @@ interface AuthContextValue {
 
 const BLANK_PENDING: PendingAuth = {
   phone: '', firstName: '', lastName: '',
-  role: 'vendeur', vehicle: '', trajetDepart: '', trajetDest: '', wilaya: '',
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
