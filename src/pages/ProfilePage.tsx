@@ -111,7 +111,7 @@ export default function ProfilePage({ lang }: Props) {
   if (transport?.type === 'maurigo')  activeBadges.push({ emoji: '🚕', fr: 'Car Rapide',  ar: 'كار رابيد' })
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pt-[192px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
 

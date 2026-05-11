@@ -52,7 +52,7 @@ export default function CarRapidePage({ lang }: Props) {
   })
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pt-[192px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#1a1200] via-[#2d2000] to-[#3d2e00]">

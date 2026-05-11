@@ -214,7 +214,7 @@ export default function LongVoyagePage({ lang }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pt-[192px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
 
       {/* Hero header */}
       <div className="bg-gradient-to-br from-[#FFE14D] via-[#FFF5B0] to-white pb-6">

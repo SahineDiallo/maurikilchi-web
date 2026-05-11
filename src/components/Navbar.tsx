@@ -22,9 +22,9 @@ const SERVICES = [
 ]
 
 // desktop: 56px main bar + 44px category tabs
-// mobile:  56px + 52px search + 40px services + 44px category tabs
+// mobile:  56px + 52px search + 44px switcher row
 export const NAVBAR_HEIGHT        = 100
-export const MOBILE_NAVBAR_HEIGHT = 192
+export const MOBILE_NAVBAR_HEIGHT = 152
 
 // v3 busts stale BigDataCloud city-level cache
 const LOC_KEY = 'mk_loc_v3'
@@ -35,6 +35,7 @@ export default function Navbar({ lang, onLangToggle }: Props) {
   const [menuOpen, setMenuOpen]             = useState(false)
   const [userMenuOpen, setUserMenuOpen]     = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [mobileMode, setMobileMode]         = useState<'livraison' | 'produits'>('livraison')
   const [city, setCity]                     = useState<string | null>(null)
   const [locLoading, setLocLoading]         = useState(false)
   const dropdownTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -277,25 +278,73 @@ export default function Navbar({ lang, onLangToggle }: Props) {
         </form>
       </div>
 
-      {/* ── Mobile services row (40px, mobile only) ─────────────────────── */}
-      <div className="sm:hidden h-10 border-b border-gray-100 bg-white flex items-center">
-        <div className="flex items-center gap-2 px-4 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
-          {SERVICES.map(svc => (
-            <Link key={svc.key} to={svc.href}
-              className={`flex items-center gap-1.5 h-7 px-3 rounded-full border text-xs font-semibold shrink-0 transition-all ${
-                routeLoc.pathname === svc.href
-                  ? 'border-amber-500 text-amber-700 bg-amber-50'
-                  : 'border-gray-200 text-gray-600 hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50'
-              }`}>
-              <span className="leading-none">{svc.emoji}</span>
-              {svc.label[lang]}
-            </Link>
-          ))}
+      {/* ── Mobile switcher row (44px, mobile only) ─────────────────────── */}
+      <div className="sm:hidden h-11 border-b border-gray-100 bg-white flex items-center gap-2 px-3">
+        {/* Segmented toggle */}
+        <div className="flex shrink-0 bg-gray-100 rounded-xl p-0.5">
+          <button
+            onClick={() => setMobileMode('livraison')}
+            className={`px-2.5 py-1 rounded-[10px] text-[11px] font-bold transition-colors whitespace-nowrap ${
+              mobileMode === 'livraison' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            {lang === 'fr' ? '🚗 Service' : '🚗 خدمة'}
+          </button>
+          <button
+            onClick={() => setMobileMode('produits')}
+            className={`px-2.5 py-1 rounded-[10px] text-[11px] font-bold transition-colors whitespace-nowrap ${
+              mobileMode === 'produits' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            {lang === 'fr' ? '🛍️ Produits' : '🛍️ منتجات'}
+          </button>
+        </div>
+
+        {/* Scrollable chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0" style={{ scrollbarWidth: 'none' }}>
+          {mobileMode === 'livraison' ? (
+            SERVICES.map(svc => (
+              <Link key={svc.key} to={svc.href}
+                className={`flex items-center gap-1 h-7 px-2.5 rounded-full border text-[11px] font-semibold shrink-0 transition-all ${
+                  routeLoc.pathname === svc.href
+                    ? 'border-amber-500 text-amber-700 bg-amber-50'
+                    : 'border-gray-200 text-gray-600'
+                }`}>
+                <span className="leading-none">{svc.emoji}</span>
+                {svc.label[lang]}
+              </Link>
+            ))
+          ) : (
+            <>
+              <Link to="/explorer"
+                className={`flex items-center gap-1 h-7 px-2.5 rounded-full border text-[11px] font-semibold shrink-0 transition-all ${
+                  routeLoc.pathname === '/explorer' && !routeLoc.search ? 'border-amber-500 text-amber-700 bg-amber-50' : 'border-gray-200 text-gray-600'
+                }`}>
+                <Grid3X3 size={11} /> {lang === 'fr' ? 'Produits' : 'المنتجات'}
+              </Link>
+              <Link to="/boutiques"
+                className={`flex items-center gap-1 h-7 px-2.5 rounded-full border text-[11px] font-semibold shrink-0 transition-all ${
+                  routeLoc.pathname === '/boutiques' ? 'border-amber-500 text-amber-700 bg-amber-50' : 'border-gray-200 text-gray-600'
+                }`}>
+                🏪 {lang === 'fr' ? 'Boutiques' : 'المتاجر'}
+              </Link>
+              {CATEGORIES.map(cat => (
+                <button key={cat.key}
+                  onClick={() => navigate(`/explorer?parent=${cat.key}`)}
+                  className={`flex items-center gap-1 h-7 px-2.5 rounded-full border text-[11px] font-semibold shrink-0 transition-all ${
+                    routeLoc.search.includes(`parent=${cat.key}`) ? 'border-amber-500 text-amber-700 bg-amber-50' : 'border-gray-200 text-gray-600'
+                  }`}>
+                  <span className="leading-none">{cat.emoji}</span>
+                  {cat.label[lang]}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
-      {/* ── Category tabs (44px) ────────────────────────────────────────── */}
-      <div className="h-11 border-b border-gray-100 flex items-stretch">
+      {/* ── Category tabs (44px, desktop only) ──────────────────────────── */}
+      <div className="hidden sm:flex h-11 border-b border-gray-100 items-stretch">
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full">
           <div className="flex items-stretch overflow-x-auto h-full" style={{ scrollbarWidth: 'none' }}>
 

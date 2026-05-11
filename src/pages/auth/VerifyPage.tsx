@@ -89,7 +89,7 @@ export default function VerifyPage({ lang }: Props) {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 flex flex-col pt-[192px] sm:pt-[100px] lg:pt-0">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 flex flex-col pt-[152px] sm:pt-[100px] lg:pt-0">
       {/* Top nav */}
       <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4">
         <button onClick={() => navigate(-1)}

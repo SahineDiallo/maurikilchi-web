@@ -79,7 +79,7 @@ export default function CreateBoutiquePage({ lang }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pt-[192px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f8f7f5] pt-[152px] sm:pt-[100px]" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-2xl mx-auto px-4 md:px-6 py-8">
 
         {/* Header */}

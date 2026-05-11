@@ -333,7 +333,7 @@ export default function ExplorePage({ lang }: Props) {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="pt-[192px] sm:pt-[100px] min-h-screen bg-[#f8f8f8]">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="pt-[152px] sm:pt-[100px] min-h-screen bg-[#f8f8f8]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-6">
         <div className="flex gap-5 py-6">
 

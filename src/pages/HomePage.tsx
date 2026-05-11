@@ -31,7 +31,7 @@ export default function HomePage({ lang }: Props) {
   })
 
   return (
-    <div className="pt-[192px] sm:pt-[100px]">
+    <div className="pt-[152px] sm:pt-[100px]">
       <HeroBanner lang={lang} />
       <ValueBar lang={lang} />
       <CategoryWidgets lang={lang} onFilter={goToParent} onSubFilter={goToSubCat} />

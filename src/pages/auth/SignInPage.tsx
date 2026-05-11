@@ -54,7 +54,7 @@ export default function SignInPage({ lang }: Props) {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen flex pt-[192px] sm:pt-[100px] lg:pt-0">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen flex pt-[152px] sm:pt-[100px] lg:pt-0">
 
       {/* ── Left brand panel (desktop only) ──────────────────────────────── */}
       <div className="hidden lg:flex flex-col justify-between w-[480px] shrink-0 relative overflow-hidden"

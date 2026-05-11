@@ -21,7 +21,7 @@ function WaIcon({ size = 18 }: { size?: number }) {
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 function Skeleton() {
   return (
-    <div className="pt-[192px] sm:pt-[100px] min-h-screen bg-white">
+    <div className="pt-[152px] sm:pt-[100px] min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
           {/* Image skeleton */}
@@ -135,7 +135,7 @@ export default function ProductDetailPage({ lang }: Props) {
 
   if (notFound || !product) {
     return (
-      <div className="pt-[192px] sm:pt-[100px] min-h-screen bg-white flex flex-col items-center justify-center gap-4 text-center px-4">
+      <div className="pt-[152px] sm:pt-[100px] min-h-screen bg-white flex flex-col items-center justify-center gap-4 text-center px-4">
         <span className="text-7xl select-none">📦</span>
         <h1 className="text-xl font-bold text-gray-900">
           {lang === 'fr' ? 'Produit introuvable' : 'المنتج غير موجود'}
@@ -170,7 +170,7 @@ export default function ProductDetailPage({ lang }: Props) {
   const price = parseFloat(product.price).toLocaleString('fr-FR')
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="pt-[192px] sm:pt-[100px] bg-white min-h-screen">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="pt-[152px] sm:pt-[100px] bg-white min-h-screen">
 
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <div className="border-b border-gray-100 bg-white/95 backdrop-blur sticky top-16 z-30">

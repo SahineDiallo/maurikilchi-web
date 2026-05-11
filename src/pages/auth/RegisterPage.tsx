@@ -115,7 +115,7 @@ export default function RegisterPage({ lang }: Props) {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen flex pt-[192px] sm:pt-[100px] lg:pt-0">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen flex pt-[152px] sm:pt-[100px] lg:pt-0">
       <BrandPanel lang={lang} />
 
       <div className="flex-1 flex flex-col">
