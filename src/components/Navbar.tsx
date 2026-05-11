@@ -440,19 +440,6 @@ export default function Navbar({ lang, onLangToggle }: Props) {
             </button>
           ))}
 
-          <div className="h-px bg-gray-100 my-2" />
-
-          {/* Services */}
-          <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 py-1">
-            {lang === 'fr' ? 'Services' : 'الخدمات'}
-          </p>
-          {SERVICES.map(svc => (
-            <Link key={svc.key} to={svc.href} onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700">
-              <span className="text-base">{svc.emoji}</span>
-              {svc.label[lang]}
-            </Link>
-          ))}
         </div>
 
         {/* Drawer footer */}
