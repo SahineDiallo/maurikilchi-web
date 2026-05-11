@@ -22,9 +22,9 @@ const SERVICES = [
 ]
 
 // desktop: 56px main bar + 44px category tabs
-// mobile:  56px + 52px search row + 44px category tabs
+// mobile:  56px + 52px search + 40px services + 44px category tabs
 export const NAVBAR_HEIGHT        = 100
-export const MOBILE_NAVBAR_HEIGHT = 152
+export const MOBILE_NAVBAR_HEIGHT = 192
 
 // v3 busts stale BigDataCloud city-level cache
 const LOC_KEY = 'mk_loc_v3'
@@ -275,6 +275,23 @@ export default function Navbar({ lang, onLangToggle }: Props) {
             <Search size={14} className="text-white" />
           </button>
         </form>
+      </div>
+
+      {/* ── Mobile services row (40px, mobile only) ─────────────────────── */}
+      <div className="sm:hidden h-10 border-b border-gray-100 bg-white flex items-center">
+        <div className="flex items-center gap-2 px-4 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
+          {SERVICES.map(svc => (
+            <Link key={svc.key} to={svc.href}
+              className={`flex items-center gap-1.5 h-7 px-3 rounded-full border text-xs font-semibold shrink-0 transition-all ${
+                routeLoc.pathname === svc.href
+                  ? 'border-amber-500 text-amber-700 bg-amber-50'
+                  : 'border-gray-200 text-gray-600 hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50'
+              }`}>
+              <span className="leading-none">{svc.emoji}</span>
+              {svc.label[lang]}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* ── Category tabs (44px) ────────────────────────────────────────── */}

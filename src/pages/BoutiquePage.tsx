@@ -186,7 +186,7 @@ function EditBoutiqueModal({
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 function Skeleton() {
   return (
-    <div className="pt-[152px] sm:pt-[100px] min-h-screen bg-[#f8f8f8]">
+    <div className="pt-[192px] sm:pt-[100px] min-h-screen bg-[#f8f8f8]">
       <div className="h-72 bg-gray-200 animate-pulse" />
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-6">
         <div className="flex gap-6 items-start">
@@ -337,7 +337,7 @@ export default function BoutiquePage({ lang }: Props) {
 
   if (notFound || !boutique) {
     return (
-      <div className="pt-[152px] sm:pt-[100px] min-h-screen bg-white flex flex-col items-center justify-center gap-4 text-center px-4">
+      <div className="pt-[192px] sm:pt-[100px] min-h-screen bg-white flex flex-col items-center justify-center gap-4 text-center px-4">
         <span className="text-7xl select-none">🏪</span>
         <h1 className="text-xl font-bold text-gray-900">
           {lang === 'fr' ? 'Boutique introuvable' : 'المتجر غير موجود'}
@@ -369,7 +369,7 @@ export default function BoutiquePage({ lang }: Props) {
   )
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="pt-[152px] sm:pt-[100px] min-h-screen bg-[#f8f8f8]">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="pt-[192px] sm:pt-[100px] min-h-screen bg-[#f8f8f8]">
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="relative h-56 md:h-80 overflow-hidden bg-gray-900">
