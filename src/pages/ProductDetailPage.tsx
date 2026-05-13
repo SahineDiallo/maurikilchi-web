@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useSeo } from '../hooks/useSeo'
 import {
   ArrowLeft, MapPin, ShoppingBag, ChevronRight,
-  Phone, Share2, CheckCircle2, XCircle,
+  Phone, Share2, CheckCircle2, XCircle, Edit2, X,
 } from 'lucide-react'
 import { type Lang } from '../constants/i18n'
 import { api, type ProductDetail, type Product } from '../lib/api'
+import { useAuth } from '../contexts/AuthContext'
 import ProductCard from '../components/ProductCard'
 
 // ─── WhatsApp SVG (no Lucide equivalent) ─────────────────────────────────────
@@ -61,8 +62,17 @@ export default function ProductDetailPage({ lang }: Props) {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const isRtl = lang === 'ar'
+  const { user } = useAuth()
 
   const [product, setProduct] = useState<ProductDetail | null>(null)
+  const [showEdit, setShowEdit] = useState(false)
+  const [editTitle,     setEditTitle]     = useState('')
+  const [editPrice,     setEditPrice]     = useState('')
+  const [editStock,     setEditStock]     = useState('')
+  const [editAvailable, setEditAvailable] = useState(true)
+  const [editDesc,      setEditDesc]      = useState('')
+  const [editLoading,   setEditLoading]   = useState(false)
+  const [editErr,       setEditErr]       = useState('')
   const [similar, setSimilar] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -131,6 +141,37 @@ export default function ProductDetailPage({ lang }: Props) {
     })
   }
 
+  const isOwner = !!user && !!product?.boutique_owner_id && String(product.boutique_owner_id) === String(user.id)
+
+  const openEdit = () => {
+    if (!product) return
+    setEditTitle(product.title)
+    setEditPrice(product.price)
+    setEditStock(String(product.stock_quantity ?? ''))
+    setEditAvailable(product.is_available)
+    setEditDesc(product.description ?? '')
+    setEditErr('')
+    setShowEdit(true)
+  }
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!product || !editTitle.trim() || !editPrice.trim()) return
+    setEditLoading(true); setEditErr('')
+    try {
+      const body: Record<string, unknown> = {
+        title: editTitle.trim(), price: editPrice.trim(), is_available: editAvailable,
+      }
+      if (editStock) body.stock_quantity = Number(editStock)
+      if (editDesc.trim()) body.description = editDesc.trim()
+      const r = await api.patch(`/products/${product.slug}/`, body)
+      setProduct(p => p ? { ...p, ...r.data } : p)
+      setShowEdit(false)
+    } catch (e: any) {
+      setEditErr(e.response?.data?.detail ?? (lang === 'fr' ? 'Erreur.' : 'خطأ.'))
+    } finally { setEditLoading(false) }
+  }
+
   if (loading) return <Skeleton />
 
   if (notFound || !product) {
@@ -195,6 +236,13 @@ export default function ProductDetailPage({ lang }: Props) {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0 ml-4">
+            {isOwner && (
+              <button onClick={openEdit}
+                className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors px-3 py-1.5 rounded-lg">
+                <Edit2 size={12} />
+                {lang === 'fr' ? 'Modifier' : 'تعديل'}
+              </button>
+            )}
             <button onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50">
               <ArrowLeft size={13} />
@@ -459,6 +507,63 @@ export default function ProductDetailPage({ lang }: Props) {
 
       {/* Fade-in keyframe */}
       <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
+
+      {/* Edit product modal — owner only */}
+      {showEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div dir={isRtl ? 'rtl' : 'ltr'} className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+              <h2 className="font-bold text-gray-900">{lang === 'fr' ? 'Modifier le produit' : 'تعديل المنتج'}</h2>
+              <button onClick={() => setShowEdit(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                <X size={15} />
+              </button>
+            </div>
+            <form onSubmit={submitEdit} className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{lang === 'fr' ? 'Titre *' : 'العنوان *'}</label>
+                <input type="text" required value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{lang === 'fr' ? 'Prix (MRU) *' : 'السعر *'}</label>
+                  <input type="number" required min="0" step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{lang === 'fr' ? 'Stock' : 'المخزون'}</label>
+                  <input type="number" min="0" value={editStock} onChange={e => setEditStock(e.target.value)}
+                    placeholder={lang === 'fr' ? 'Illimité' : 'غير محدود'}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{lang === 'fr' ? 'Description' : 'الوصف'}</label>
+                <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={4}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all resize-none" />
+              </div>
+              <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                <span className="text-sm font-medium text-gray-700">{lang === 'fr' ? 'Disponible à la vente' : 'متاح للبيع'}</span>
+                <button type="button" onClick={() => setEditAvailable(v => !v)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${editAvailable ? 'bg-amber-400' : 'bg-gray-200'}`}>
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${editAvailable ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+              {editErr && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2">{editErr}</p>}
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowEdit(false)}
+                  className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                  {lang === 'fr' ? 'Annuler' : 'إلغاء'}
+                </button>
+                <button type="submit" disabled={editLoading}
+                  className="flex-1 py-3 rounded-xl bg-[#F8AC12] text-gray-900 font-bold text-sm hover:bg-amber-400 transition-colors disabled:opacity-60">
+                  {editLoading ? '…' : (lang === 'fr' ? 'Enregistrer' : 'حفظ')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

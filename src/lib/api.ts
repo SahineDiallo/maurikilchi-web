@@ -90,11 +90,13 @@ export interface Product {
   primary_image_url: string | null
   primary_image: string | null
   images?: { image_url: string }[]
+  category?: number | null
   category_name: string
   boutique_name: string
   boutique_slug?: string
   description?: string
   is_available?: boolean
+  stock_quantity?: number | null
   old_price?: string | null
 }
 
@@ -105,4 +107,5 @@ export interface ProductDetail extends Product {
   boutique_ville: string | null
   boutique_whatsapp: string | null
   boutique_phone: string | null
+  boutique_owner_id?: number
 }

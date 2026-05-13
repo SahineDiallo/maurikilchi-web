@@ -190,8 +190,8 @@ export default function ProductModal({ boutiqueId, categories, lang, onClose, on
       if (imageFile) {
         try {
           const fd = new FormData(); fd.append('image', imageFile); fd.append('is_primary', 'true')
-          await api.post(`/products/${product.id}/images/`, fd)
-          product.primary_image_url = preview
+          const imgRes = await api.post(`/products/${product.id}/images/`, fd)
+          product.primary_image_url = imgRes.data.image_url ?? preview
         } catch { }
       }
       for (const file of extraFiles) {
