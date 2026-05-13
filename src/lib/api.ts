@@ -82,6 +82,13 @@ export interface Category {
   children?: Category[]
 }
 
+export interface ProductImage {
+  id: number
+  image_url: string
+  is_primary: boolean
+  order?: number
+}
+
 export interface Product {
   id: number
   slug: string
@@ -89,7 +96,7 @@ export interface Product {
   price: string
   primary_image_url: string | null
   primary_image: string | null
-  images?: { image_url: string }[]
+  images?: ProductImage[]
   category?: number | null
   category_name: string
   boutique_name: string
@@ -108,4 +115,21 @@ export interface ProductDetail extends Product {
   boutique_whatsapp: string | null
   boutique_phone: string | null
   boutique_owner_id?: number
+}
+
+// ─── Simple in-memory GET cache (module-level, survives route changes) ────────
+const _cache = new Map<string, { data: unknown; ts: number }>()
+const CACHE_TTL = 90_000 // 90 seconds
+
+export async function cachedGet<T = unknown>(url: string, params?: Record<string, unknown>): Promise<T> {
+  const key = url + (params ? JSON.stringify(params) : '')
+  const hit = _cache.get(key)
+  if (hit && Date.now() - hit.ts < CACHE_TTL) return hit.data as T
+  const res = await api.get<T>(url, { params })
+  _cache.set(key, { data: res.data, ts: Date.now() })
+  return res.data
+}
+
+export function bustCache(prefix: string) {
+  for (const k of _cache.keys()) if (k.startsWith(prefix)) _cache.delete(k)
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Grid3X3, Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { type Lang } from '../constants/i18n'
-import { api, type Product } from '../lib/api'
+import { api, cachedGet, type Product } from '../lib/api'
 import { CATEGORIES } from '../constants/categories'
 import ProductCard from '../components/ProductCard'
 import { useSeo } from '../hooks/useSeo'
@@ -215,10 +215,9 @@ export default function ExplorePage({ lang }: Props) {
     if (maxPrice)                   params.max_price     = maxPrice
     if (inStock)                    params.is_available  = 'true'
 
-    api.get('/products/', { params })
-      .then(res => {
+    cachedGet('/products/', params)
+      .then((data: any) => {
         if (cancelled) return
-        const data = res.data
         const results: Product[] = Array.isArray(data) ? data : (data?.results ?? [])
         setProducts(results)
         setTotal(Array.isArray(data) ? data.length : (data?.count ?? results.length))

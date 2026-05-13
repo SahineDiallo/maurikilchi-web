@@ -6,7 +6,7 @@ import {
   Share2, CheckCircle2, Phone, Plus, Trash2, Edit2, Image as ImgIcon,
 } from 'lucide-react'
 import { type Lang } from '../constants/i18n'
-import { api, type Boutique, type Product } from '../lib/api'
+import { api, cachedGet, bustCache, type Boutique, type Product } from '../lib/api'
 import ProductCard from '../components/ProductCard'
 import { useAuth } from '../contexts/AuthContext'
 import ProductModal, { type Category as MgmtCategory } from '../components/ProductModal'
@@ -44,9 +44,45 @@ function EditProductModal({ product, categories, lang, onClose, onUpdated }: {
   const [stock,     setStock]     = useState(String(product.stock_quantity ?? ''))
   const [available, setAvailable] = useState(product.is_available !== false)
   const [catId,     setCatId]     = useState(String(product.category ?? ''))
-  const [desc,      setDesc]      = useState(product.description ?? '')
+  const [desc,      setDesc]      = useState((product.description ?? '').replace(/<[^>]+>/g, '').trim())
   const [loading,   setLoading]   = useState(false)
   const [err,       setErr]       = useState('')
+  const imgRef = useRef<HTMLInputElement>(null)
+
+  type Img = { id: number; image_url: string; is_primary: boolean }
+  const [images,        setImages]        = useState<Img[]>(product.images as Img[] ?? [])
+  const [deletingImgId, setDeletingImgId] = useState<number | null>(null)
+  const [addingImg,     setAddingImg]     = useState(false)
+  const [imgErr,        setImgErr]        = useState('')
+
+  const deleteImg = async (id: number) => {
+    setDeletingImgId(id)
+    try {
+      await api.delete(`/products/${product.id}/images/${id}/`)
+      setImages(prev => prev.filter(i => i.id !== id))
+    } catch { }
+    setDeletingImgId(null)
+  }
+
+  const pickImg = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return
+    e.target.value = ''; setImgErr(''); setAddingImg(true)
+    try {
+      const fd = new FormData(); fd.append('image', f)
+      try { await api.post('/moderation/check/', fd) }
+      catch (e: any) {
+        if (e.response?.data?.person_detected) {
+          setImgErr(lang === 'fr' ? 'Image refusée : personne détectée.' : 'صورة مرفوضة: تم اكتشاف شخص.')
+          setAddingImg(false); return
+        }
+      }
+      const fd2 = new FormData(); fd2.append('image', f)
+      fd2.append('is_primary', images.length === 0 ? 'true' : 'false')
+      const r = await api.post(`/products/${product.id}/images/`, fd2)
+      setImages(prev => [...prev, { id: r.data.id, image_url: r.data.image_url, is_primary: r.data.is_primary }])
+    } catch { setImgErr(lang === 'fr' ? 'Erreur de téléchargement.' : 'خطأ في الرفع.') }
+    setAddingImg(false)
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,7 +94,7 @@ function EditProductModal({ product, categories, lang, onClose, onUpdated }: {
       if (desc.trim()) body.description = desc.trim()
       if (catId) body.category = Number(catId)
       const r = await api.patch(`/products/${product.slug}/`, body)
-      onUpdated({ ...product, ...r.data })
+      onUpdated({ ...product, ...r.data, images })
       onClose()
     } catch (e: any) {
       setErr(e.response?.data?.detail ?? (lang === 'fr' ? 'Erreur.' : 'خطأ.'))
@@ -73,6 +109,39 @@ function EditProductModal({ product, categories, lang, onClose, onUpdated }: {
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"><X size={15} /></button>
         </div>
         <form onSubmit={submit} className="px-6 py-5 space-y-4">
+
+          {/* Images */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{lang === 'fr' ? 'Images' : 'الصور'}</label>
+            <div className="flex gap-2 flex-wrap">
+              {images.map(img => (
+                <div key={img.id} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shrink-0">
+                  <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                  {img.is_primary && (
+                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-amber-400/90 text-gray-900 py-0.5">
+                      {lang === 'fr' ? 'Principale' : 'رئيسية'}
+                    </span>
+                  )}
+                  <button type="button" onClick={() => deleteImg(img.id)} disabled={deletingImgId === img.id}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors disabled:opacity-50">
+                    {deletingImgId === img.id
+                      ? <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                      : <X size={10} color="white" />}
+                  </button>
+                </div>
+              ))}
+              {images.length < 4 && (
+                <button type="button" onClick={() => !addingImg && imgRef.current?.click()} disabled={addingImg}
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 hover:border-amber-400 bg-gray-50 hover:bg-amber-50 flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-60 shrink-0">
+                  {addingImg ? <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                    : <><Plus size={16} className="text-gray-400" /><span className="text-[10px] text-gray-400">{lang === 'fr' ? 'Ajouter' : 'إضافة'}</span></>}
+                </button>
+              )}
+            </div>
+            <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={pickImg} />
+            {imgErr && <p className="text-xs text-red-500 mt-1">{imgErr}</p>}
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{lang === 'fr' ? 'Titre *' : 'العنوان *'}</label>
             <input type="text" required value={title} onChange={e => setTitle(e.target.value)}
@@ -370,19 +439,17 @@ export default function BoutiquePage({ lang }: Props) {
     setBoutique(null)
     setProducts([])
 
-    api.get(`/boutiques/${slug}/`)
-      .then(res => {
-        const b: Boutique = res.data
+    cachedGet<Boutique>(`/boutiques/${slug}/`)
+      .then(b => {
         setBoutique(b)
-        return api.get('/products/', { params: { boutique: b.id, page_size: 24 } })
+        return cachedGet<{ results?: Product[]; next?: string } | Product[]>('/products/', { boutique: b.id, page_size: 24 })
       })
-      .then(res => {
-        const data = res.data
+      .then(data => {
         const results: Product[] = Array.isArray(data) ? data : (data?.results ?? [])
         setProducts(results)
-        setNextUrl(Array.isArray(data) ? null : (data?.next ?? null))
+        setNextUrl(Array.isArray(data) ? null : ((data as any)?.next ?? null))
       })
-      .catch(err => { if (err?.response?.status === 404) setNotFound(true) })
+      .catch(err => { if ((err as any)?.response?.status === 404) setNotFound(true) })
       .finally(() => setLoading(false))
   }, [slug])
 
@@ -415,6 +482,7 @@ export default function BoutiquePage({ lang }: Props) {
     try {
       await api.delete(`/products/${productSlug}/`)
       setProducts(prev => prev.filter(p => p.slug !== productSlug))
+      bustCache('/products/')
     } catch { } finally { setDeletingSlug(null) }
   }
 
@@ -797,7 +865,7 @@ export default function BoutiquePage({ lang }: Props) {
           categories={mgmtCats}
           lang={lang}
           onClose={() => setShowModal(false)}
-          onCreated={p => setProducts(prev => [p as unknown as Product, ...prev])}
+          onCreated={p => { bustCache('/products/'); setProducts(prev => [p as unknown as Product, ...prev]) }}
         />
       )}
 
@@ -809,7 +877,7 @@ export default function BoutiquePage({ lang }: Props) {
           lang={lang}
           onClose={() => setEditingProduct(null)}
           onUpdated={updated => {
-            setProducts(prev => prev.map(p => p.slug === updated.slug ? updated : p))
+            bustCache('/products/'); setProducts(prev => prev.map(p => p.slug === updated.slug ? updated : p))
             setEditingProduct(null)
           }}
         />

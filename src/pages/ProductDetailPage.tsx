@@ -149,7 +149,7 @@ export default function ProductDetailPage({ lang }: Props) {
     setEditPrice(product.price)
     setEditStock(String(product.stock_quantity ?? ''))
     setEditAvailable(product.is_available)
-    setEditDesc(product.description ?? '')
+    setEditDesc((product.description ?? '').replace(/<[^>]+>/g, '').trim())
     setEditErr('')
     setShowEdit(true)
   }
@@ -450,10 +450,11 @@ export default function ProductDetailPage({ lang }: Props) {
             <h2 className="text-lg font-bold text-gray-900 mb-5">
               {lang === 'fr' ? 'Description du produit' : 'وصف المنتج'}
             </h2>
-            <div className={`text-sm text-gray-600 leading-7 whitespace-pre-line ${!expanded ? 'line-clamp-6' : ''}`}>
-              {product.description}
-            </div>
-            {product.description.length > 400 && (
+            <div
+              className={`text-sm text-gray-600 leading-7 prose prose-sm max-w-none ${!expanded ? 'line-clamp-6' : ''}`}
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+            {product.description.replace(/<[^>]+>/g, '').length > 400 && (
               <button onClick={() => setExpanded(v => !v)}
                 className="mt-3 text-sm font-bold transition-colors hover:opacity-80"
                 style={{ color: '#C98A00' }}>
