@@ -187,19 +187,25 @@ export default function ProductModal({ boutiqueId, categories, lang, onClose, on
       const res = await api.post('/products/', body)
       const product: Product & { id: number } = res.data
 
+      // Upload all images in parallel
+      const uploads: Promise<void>[] = []
       if (imageFile) {
-        try {
+        uploads.push((async () => {
           const fd = new FormData(); fd.append('image', imageFile); fd.append('is_primary', 'true')
-          const imgRes = await api.post(`/products/${product.id}/images/`, fd)
-          product.primary_image_url = imgRes.data.image_url ?? preview
-        } catch { }
+          try {
+            const r = await api.post(`/products/${product.id}/images/`, fd)
+            product.primary_image_url = r.data.image_url ?? preview
+          } catch { }
+        })())
       }
       for (const file of extraFiles) {
-        try {
-          const fd = new FormData(); fd.append('image', file); fd.append('is_primary', 'false')
-          await api.post(`/products/${product.id}/images/`, fd)
-        } catch { }
+        const f = file
+        uploads.push((async () => {
+          const fd = new FormData(); fd.append('image', f); fd.append('is_primary', 'false')
+          try { await api.post(`/products/${product.id}/images/`, fd) } catch { }
+        })())
       }
+      if (uploads.length) await Promise.all(uploads)
       onCreated(product); onClose()
     } catch (e: any) {
       setErr(e.response?.data?.detail ?? (lang === 'fr' ? 'Erreur lors de la création.' : 'خطأ في الإنشاء.'))
