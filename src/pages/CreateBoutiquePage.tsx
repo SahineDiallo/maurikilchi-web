@@ -60,13 +60,18 @@ export default function CreateBoutiquePage({ lang }: Props) {
       const boutique = res.data
 
       if (imageFile) {
+        const fd = new FormData()
+        fd.append('image', imageFile)
         try {
-          const fd = new FormData()
-          fd.append('image', imageFile)
-          await api.post(`/boutiques/${boutique.slug}/image/`, fd, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          })
-        } catch { /* image upload failed, boutique still created */ }
+          await api.post(`/boutiques/${boutique.slug}/image/`, fd)
+        } catch (imgErr: any) {
+          const detail = imgErr?.response?.data?.detail
+          if (detail) {
+            setErr(detail)
+            setLoading(false)
+            return
+          }
+        }
       }
 
       navigate('/compte')

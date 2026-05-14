@@ -251,14 +251,18 @@ function EditBoutiqueModal({
       let updated: Boutique = res.data
 
       if (imageFile) {
+        const fd = new FormData()
+        fd.append('image', imageFile)
         try {
-          const fd = new FormData()
-          fd.append('image', imageFile)
           const imgRes = await api.post(`/boutiques/${boutique.slug}/image/`, fd)
           updated = { ...updated, image_url: imgRes.data.image_url }
-        } catch { /* image non-blocking */ }
+        } catch (imgErr: any) {
+          const detail = imgErr?.response?.data?.detail
+          if (detail) { setErr(detail); setLoading(false); return }
+        }
       }
 
+      bustCache(`/boutiques/${boutique.slug}/`)
       onUpdated(updated)
       onClose()
     } catch (e: any) {
@@ -439,12 +443,12 @@ export default function BoutiquePage({ lang }: Props) {
     setBoutique(null)
     setProducts([])
 
-    cachedGet<Boutique>(`/boutiques/${slug}/`)
-      .then(b => {
+    Promise.all([
+      cachedGet<Boutique>(`/boutiques/${slug}/`),
+      cachedGet<{ results?: Product[]; next?: string } | Product[]>('/products/', { boutique: slug, page_size: 24 }),
+    ])
+      .then(([b, data]) => {
         setBoutique(b)
-        return cachedGet<{ results?: Product[]; next?: string } | Product[]>('/products/', { boutique: b.id, page_size: 24 })
-      })
-      .then(data => {
         const results: Product[] = Array.isArray(data) ? data : (data?.results ?? [])
         setProducts(results)
         setNextUrl(Array.isArray(data) ? null : ((data as any)?.next ?? null))
