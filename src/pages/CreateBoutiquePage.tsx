@@ -20,7 +20,7 @@ const BOUTIQUE_TYPES = [
 
 export default function CreateBoutiquePage({ lang }: Props) {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, bootstrapDone } = useAuth()
   const isRtl = lang === 'ar'
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -33,6 +33,7 @@ export default function CreateBoutiquePage({ lang }: Props) {
   const [loading,   setLoading]   = useState(false)
   const [err,       setErr]       = useState('')
 
+  if (!bootstrapDone) return null
   if (!user) { navigate('/connexion'); return null }
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))

@@ -15,7 +15,7 @@ interface Boutique {
 }
 
 export default function ProfilePage({ lang }: Props) {
-  const { user, logout, login } = useAuth()
+  const { user, logout, login, bootstrapDone } = useAuth()
   const navigate = useNavigate()
   const isRtl = lang === 'ar'
   const menuRef = useRef<HTMLDivElement>(null)
@@ -49,7 +49,7 @@ export default function ProfilePage({ lang }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  useEffect(() => { if (!user) navigate('/connexion') }, [user, navigate])
+  useEffect(() => { if (bootstrapDone && !user) navigate('/connexion') }, [bootstrapDone, user, navigate])
 
   useEffect(() => {
     if (!user) return

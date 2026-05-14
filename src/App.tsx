@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import type { Lang } from './constants/i18n'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -34,6 +34,14 @@ export default function App() {
 }
 
 function AppShell({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
+  const { bootstrapDone } = useAuth()
+
+  if (!bootstrapDone) return (
+    <div className="min-h-screen bg-[#f8f7f5] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
       <ScrollToTop />
